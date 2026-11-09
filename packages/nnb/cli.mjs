@@ -1,6 +1,6 @@
 // nnb — nuxt-native-bridge CLI. argv dispatch only; logic lives in commands.mjs.
 // Usage: nnb <command> <target> [--flags]. See help for the current Phase 0 set.
-import { devElectron, buildElectron, buildAndroid, sync, doctor } from './commands.mjs'
+import { devElectron, buildElectron, buildAndroid, sync, icons, doctor } from './commands.mjs'
 
 const [cmd, target, ...flags] = process.argv.slice(2)
 const opts = {
@@ -15,6 +15,8 @@ const HELP = `nnb — nuxt-native-bridge CLI (Phase 0)
                              (--installer adds the Squirrel installer pass)
   nnb build android          cap sync + gradlew assembleDebug → APK
   nnb sync                   cap sync only
+  nnb icons                  generate web/desktop icons + android mipmaps from
+                             nuxt.config.ts nativeBridge.icons (spec §6.5)
   nnb doctor                 environment & project checks
 
 Run inside the app directory (the Nuxt app using nuxt-native-bridge).
@@ -35,6 +37,9 @@ export function main() {
   }
   else if (cmd === 'sync') {
     sync()
+  }
+  else if (cmd === 'icons') {
+    icons()
   }
   else if (cmd === 'doctor') {
     doctor()

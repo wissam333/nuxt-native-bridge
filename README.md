@@ -13,7 +13,7 @@ tagline — *One Nuxt codebase → website, desktop, Android* — and the `nnb` 
 packages/nuxt-native-bridge/     the module (build-target switch, boot script, runtime)
   src/                           module.ts + runtime (composables, client plugin, base css)
   playground/                    the demo app
-    app/ public/ scripts/
+    app/ public/
     android/                     Capacitor native shell (raw material for adapter-capacitor)
   test/                          module tests
 packages/adapter-electron/       hardened Electron shell (app://, sandbox, window-state,
@@ -32,4 +32,7 @@ docs/                            plan + notes (docs/nnb-plan.md = current workin
 - adapter-electron extracted; unit-tested path resolver, smoke-tested against the
   playground build; dev-server mode added for `nnb dev electron`.
 - Android APK verified via the CLI; adapter-capacitor extraction pending.
-- Next: `nnb icons` parameterization, then Phase 2 module work (see `docs/nnb-plan.md`).
+- `nnb icons` verified: config-driven (spec §5 `nativeBridge.icons` + `brand.color`
+  as the audit-13 plate source), outputs byte-identical to the old hardcoded
+  script; launcher/splash re-verified in the Android build. `.icns` is Phase 2.
+- Next: Phase 2 module work (keyboard, theme; see `docs/nnb-plan.md`).

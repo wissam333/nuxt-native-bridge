@@ -155,4 +155,22 @@ Acceptance (spec): playground builds web, Electron and Android using only the mo
   unescape, dynamic artifact-dir matching, installer path print, real fail count.
   Next: step 5 `nnb icons` parameterization; Phase 2 module work (keyboard, theme);
   adapter-capacitor extraction.
+- **2026-11-09** — Phase 0 step 5: `nnb icons` — verified. Generator moved from
+  `playground/scripts/generate-icons.mjs` into `packages/nnb/icons.mjs`, fully
+  parameterized per spec §5+§6.5: `source` / `android.glyph` / `android.background`
+  (`"#hex"` = flat, `[top, bottom]` = vertical gradient) / `android.glyphFraction`
+  (default 0.5) / `splash`; `nativeBridge.brand.color` is the single plate source
+  for `ic_launcher_background.xml` (audit 13), falling back to background top when
+  absent — bad colors fail loudly (`hexToRgb`). `sharp` now a declared nnb dep.
+  Lazy rulings: `assets/icon.png` output dropped (zero consumers found; Forge icon
+  = `NNB_ICON` favicon.ico); jpg→png bootstrapping dropped (app artwork owned by
+  the app); android block skips cleanly when the app has no `android/` shell;
+  `.icns` deferred to Phase 2 (spec Phase-2 milestone). Tests: 4 node --test
+  (color parse, background shape, ICO container header — which caught the test's
+  own first off-by-one between data-size@14 and data-offset@18). Gates:
+  `nnb icons` regenerated everything byte-identical (favicon.ico 85362 bytes
+  before/after; git shows zero regenerated-file diffs); `nnb build android`
+  BUILD SUCCESSFUL in 2s with fresh APK (FROM-CACHE + parallel config working).
+  Next: Phase 2 module work (keyboard, theme, viewport) in the module; then
+  adapter-capacitor extraction; `nnb init` only when a second consumer app needs it.
 
