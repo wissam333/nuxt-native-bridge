@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ system splash masks the icon with a circle. Inset the logo
+     (20% each side => 60% of the canvas) so it stays fully inside the mask
+     instead of being cut off at the edges. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:inset="20%"
+    android:drawable="@drawable/splash_icon_logo" />

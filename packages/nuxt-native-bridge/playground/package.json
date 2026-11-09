@@ -1,0 +1,39 @@
+{
+  "name": "nnb-playground",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "icons:generate": "node scripts/generate-icons.mjs",
+    "make:electron": "node scripts/generate-icons.mjs && nuxt generate && node scripts/copy-dist.mjs && cd my-app && npx electron-forge make"
+  },
+  "dependencies": {
+    "nuxt-native-bridge": "workspace:*",
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/keyboard": "^8.0.5",
+    "@capacitor/share": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
+    "@iconify-json/bi": "^1.2.7",
+    "@iconify-json/mdi": "^1.2.3",
+    "@iconify-json/ph": "^1.2.2",
+    "@nuxt/icon": "^2.1.0",
+    "@nuxt/image": "^2.0.0",
+    "nuxt": "^4.5.2",
+    "vue": "^3.5.24",
+    "vue-router": "^4.6.3"
+  },
+  "devDependencies": {
+    "sass": "^1.86.3",
+    "sass-loader": "^16.0.5",
+    "sharp": "^0.35.4",
+    "typescript": "^5.9.2"
+  }
+}

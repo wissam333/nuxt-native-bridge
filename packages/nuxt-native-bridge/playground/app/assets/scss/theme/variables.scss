@@ -1,0 +1,39 @@
+:root {
+  /* Brand teal from owner screenshot / logo */
+  --primary: #0d8a8f;
+  --primary-soft: rgba(13, 138, 143, 0.1);
+  --primary-mid: rgba(13, 138, 143, 0.2);
+  --primary-dark: #0a5c61;
+  /* Deep teal used in balance gradients (screenshot wallet card) */
+  --secondary: #0a5c61;
+  --secondary-soft: rgba(10, 92, 97, 0.1);
+  --secondary-mid: rgba(10, 92, 97, 0.2);
+  /* Accent orange from logo arrows */
+  --accent: #e85d2a;
+  --accent-soft: rgba(232, 93, 42, 0.12);
+  /* Soft mint page wash — spirit of the screenshot */
+  --bg-page: #f3fafb;
+  --bg-surface: #ffffff;
+  --bg-elevated: #eef8f9;
+  --border-color: #d7ecee;
+  --border-strong: #a3c8cc;
+  --text-primary: #0a3d40;
+  --text-secondary: #3d6568;
+  --text-muted: #4d7578;
+  --text-sub: #4a6f72;
+}
+
+:root.dark {
+  --bg-page: #0b1416;
+  --bg-surface: #132022;
+  --bg-elevated: #1e3437;
+  --border-color: #2e4f53;
+  --border-strong: #4a7277;
+  --text-primary: #ffffff;
+  --text-secondary: #f0f9f9;
+  --text-muted: #e6f2f3;
+  --text-sub: #ffffff;
+  --primary-soft: rgba(13, 138, 143, 0.22);
+  --primary-mid: rgba(13, 138, 143, 0.32);
+  --accent-soft: rgba(232, 93, 42, 0.22);
+}

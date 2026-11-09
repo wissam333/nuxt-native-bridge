@@ -1,0 +1,42 @@
+/* nuxt-native-bridge base layer.
+   Native parts only — brand/theme styles stay in the app (main.scss).
+   Scopes via html[data-nnb-native] / [data-nnb-target] set by the boot script. */
+
+/* Tap/callout resets: universal (cheap, no visual side effects). */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Selection: locked on native shells only, so web/desktop users can still copy
+   account numbers or references (audit item 33). Allow-list for where selection
+   makes sense. */
+html[data-nnb-native="1"] body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html[data-nnb-native="1"] input,
+html[data-nnb-native="1"] textarea,
+html[data-nnb-native="1"] [contenteditable],
+html[data-nnb-native="1"] [data-selectable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Safe-area tokens: real insets win, the boot-script minimums only fill in when
+   the platform reports env() as 0 (edge-to-edge Android, audit item 20). */
+:root {
+  --safe-area-top-min: 0px;
+  --safe-area-bottom-min: 0px;
+  --app-safe-area-top: max(env(safe-area-inset-top, 0px), var(--safe-area-top-min, 0px));
+  --app-safe-area-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-area-bottom-min, 0px));
+}
+
+/* Native shells fill the viewport; the web target keeps normal document flow. */
+html[data-nnb-native="1"],
+html[data-nnb-native="1"] body {
+  margin: 0;
+  height: 100dvh;
+}
+
