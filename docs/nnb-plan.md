@@ -127,4 +127,32 @@ Acceptance (spec): playground builds web, Electron and Android using only the mo
   Gates: adapter tests 12/12, adapter lint 0, module lint 0, module test 1/1, smoke
   fixture PASS, integration smoke (playground build via `NNB_UI_DIR` + `NNB_SMOKE_EXPECT`)
   PASS. Next: step 4 `nnb` CLI; step 5 icon generator parameterization (BRAND_BG marked).
+- **2026-11-09** — Phase 0 step 4: `packages/nnb` CLI — verified. Zero runtime deps
+  except `jiti` (reads nuxt.config.ts via `defineNuxtConfig` polyfill); no arg parser —
+  `dev electron` / `build electron [--installer]` / `build android` / `sync` / `doctor`;
+  app-dir cwd contract (run inside the app; `--dir` not implemented — lazy ruling).
+  Adapter got 4 additive edits: `NNB_DEV_URL` mode (protocol skip + dev origin in
+  will-navigate guard), static behavior unchanged (tests still 12/12).
+  Layout rulings that only existed as hacks before now live in real places:
+  `nodeLinker: hoisted` (electron-packager's flora-colossus cannot walk pnpm symlinks),
+  `debug` declared direct (electron-squirrel-startup walker), `author` restored
+  (Squirrel nuspec), electron mirror owned by CLI via `electronEnv()` (root `.npmrc`
+  hack retired); Gradle side: Aliyun google/central mirrors prepended in playground
+  `android/settings.gradle` (dl.google.com binaries unreachable — same ladder),
+  `gradle.properties` parallel+caching+2G heap, hardcoded `org.gradle.java.home`
+  removed (CLI's `JAVA_HOME` wins; doctor finds JDK by proxy).
+  Debug ruling (root-caused, measured): `nuxt dev` binds `[::1]` only on Windows
+  machines like this one — `waitPort` now probes `::1` **and** `127.0.0.1`
+  (earlier "stall" was a readiness-probe false negative; server was healthy).
+  cap sync rewrote `capacitor.settings.gradle` plugin dirs to root `node_modules`
+  (4 levels up under hoisted layout) — committed as regenerated truth.
+  Gates: `doctor` 7/7 ✔; `build electron` → `out/NNB Playground-win32-x64/nnbplayground.exe`;
+  `build electron --installer` → `out/make/squirrel.windows/x64/NNB Playground-Setup.exe`;
+  `dev electron` + `NNB_SMOKE_EXPECT='NNB Playground'` → `smoke ok`, exit 0;
+  `build android` → `app-debug.apk` 8.8MB (cold 2m01s → warm 20s after Gradle tuning
+  — no Android Studio needed; same Gradle toolchain as AS plus warm daemon/cache).
+  CLI fixes en route: double-skipped argv destructure, java-properties `sdk.dir`
+  unescape, dynamic artifact-dir matching, installer path print, real fail count.
+  Next: step 5 `nnb icons` parameterization; Phase 2 module work (keyboard, theme);
+  adapter-capacitor extraction.
 

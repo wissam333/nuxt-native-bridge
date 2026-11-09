@@ -1,6 +1,10 @@
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
+        // Aliyun mirrors first: dl.google.com / mavenCentral binaries are
+        // unreachable on some networks (same ruling as the electron mirror).
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/central' }
         google()
         mavenCentral()
     }

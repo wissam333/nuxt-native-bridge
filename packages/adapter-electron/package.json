@@ -4,6 +4,7 @@
   "private": true,
   "description": "NNB adapter-electron: hardened Electron shell for Nuxt SPAs (spec §6.2).",
   "license": "MIT",
+  "author": "Wissam Najjom",
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
@@ -14,6 +15,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "debug": "^4.4.0",
     "electron-squirrel-startup": "^1.0.1"
   },
   "devDependencies": {

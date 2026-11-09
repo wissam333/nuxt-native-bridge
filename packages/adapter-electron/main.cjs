@@ -18,6 +18,10 @@ if (require('electron-squirrel-startup')) app.quit()
 
 const APP_NAME = process.env.NNB_APP_NAME || 'Nnb App'
 
+// `nnb dev electron` runs `nuxt dev` and sets this; the window then loads the
+// HMR server directly instead of the static app:// bundle (spec §6.4).
+const DEV_URL = process.env.NNB_DEV_URL || ''
+
 // Must run before app ready: app:// gets standard/secure semantics so the SPA
 // can use history routing, fetch and XHR against its own origin (spec §3.1).
 protocol.registerSchemesAsPrivileged([
@@ -85,17 +89,18 @@ function createWindow() {
   })
 
   // History-API navigations never hit this; only real navigations do, and
-  // they may only stay on our origin.
+  // they may only stay on our origin (app:// static, or the dev server URL).
   mainWindow.webContents.on('will-navigate', (e, url) => {
-    if (url.startsWith('app://')) return
+    if (url.startsWith(DEV_URL || 'app://')) return
     e.preventDefault()
     if (/^https?:/i.test(url)) void shell.openExternal(url)
   })
 
   if (process.env.NNB_SMOKE) attachSmoke(mainWindow)
 
+  // Dev: the HMR server from `nnb dev electron`; else the static UI via app://.
   // Not awaited: smoke must subscribe before did-finish-load can fire.
-  void mainWindow.loadURL('app://./')
+  void mainWindow.loadURL(DEV_URL || 'app://./')
 }
 
 // Audit 9.1/4 lives in ui-router.cjs (unit-tested); this handler composes it
@@ -146,6 +151,11 @@ app.on('before-quit', () => {
 })
 
 app.whenReady().then(() => {
+  if (DEV_URL) {
+    // Dev HMR mode: no static UI source required, protocol left unregistered.
+    createWindow()
+    return
+  }
   const uiRoot = resolveUiRoot()
   if (!uiRoot) {
     app.exit(1)

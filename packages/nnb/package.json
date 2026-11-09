@@ -1,0 +1,21 @@
+{
+  "name": "nnb",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "nnb — nuxt-native-bridge CLI: dev/build/doctor for web, Electron and Android targets.",
+  "license": "MIT",
+  "bin": {
+    "nnb": "cli.mjs"
+  },
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "jiti": "^2.4.0"
+  },
+  "devDependencies": {
+    "@nuxt/eslint-config": "^1.17.0",
+    "eslint": "^10.12.0"
+  }
+}

@@ -13,3 +13,7 @@ allowBuilds:
 # pnpm 12 blocks git subdependencies by default — Forge officially needs this one.
 blockExoticSubdeps: false
 
+# electron-packager's dependency walker doesn't understand pnpm's symlinked
+# layout, so packaging needs an npm-like flat layout (its canonical fix).
+nodeLinker: hoisted
+
