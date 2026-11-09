@@ -8,8 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "icons:generate": "node scripts/generate-icons.mjs",
-    "make:electron": "node scripts/generate-icons.mjs && nuxt generate && node scripts/copy-dist.mjs && cd my-app && npx electron-forge make"
+    "icons:generate": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "nuxt-native-bridge": "workspace:*",

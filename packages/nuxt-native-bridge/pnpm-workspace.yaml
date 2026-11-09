@@ -1,5 +1,0 @@
-packages:
-  - playground
-allowBuilds:
-  esbuild: true
-  "@parcel/watcher": true

@@ -1,0 +1,32 @@
+{
+  "name": "adapter-electron",
+  "version": "0.0.0",
+  "private": true,
+  "description": "NNB adapter-electron: hardened Electron shell for Nuxt SPAs (spec §6.2).",
+  "license": "MIT",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "smoke": "node scripts/smoke.cjs",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "test": "node --test",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.1"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.10.2",
+    "@electron-forge/maker-deb": "^7.10.2",
+    "@electron-forge/maker-rpm": "^7.10.2",
+    "@electron-forge/maker-squirrel": "^7.11.1",
+    "@electron-forge/maker-zip": "^7.11.2",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.10.2",
+    "@electron-forge/plugin-fuses": "^7.10.2",
+    "@electron/fuses": "^1.8.0",
+    "@nuxt/eslint-config": "^1.17.0",
+    "electron": "39.2.4",
+    "eslint": "^10.12.0"
+  }
+}

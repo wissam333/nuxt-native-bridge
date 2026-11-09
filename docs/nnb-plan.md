@@ -107,4 +107,24 @@ Acceptance (spec): playground builds web, Electron and Android using only the mo
   `.history/` added to root .gitignore (agent/IDE residue). `git user.name` set to
   "Wissam Najjom". Fresh-clone release builds fail without the keystore — release policy
   pending (see docs/android-release.md).
+- **2026-11-09** — Phase 0 step 3: `packages/adapter-electron` extracted (spec §6.2, audit
+  9.1/1–7) ✅ verified. Monorepo root moved to repo root: pnpm-workspace.yaml now lists
+  `packages/*` + `packages/*/playground`; `allowBuilds` + `electron`/`electron-winstaller`
+  added; `blockExoticSubdeps: false` for Forge's git-based `@electron/node-gyp` subdep;
+  electron mirror promoted to root `.npmrc`; package-level workspace yaml + stale lock
+  removed. Adapter: CJS `main.cjs`/`preload.cjs` (`sandbox:true`), pure `ui-router.cjs`
+  (app:// SPA fallback, single decode, resolved-path containment — 12/12 `node:test`
+  units), `window-state.cjs` (userData json, finite-number validation; x/y not clamped —
+  shortcut note in code), single-instance lock, `setWindowOpenHandler`/`will-navigate`
+  guards, CSP header (`NNB_CSP` override, `unsafe-inline` until module nonce mode),
+  `NNB_SMOKE` boot probe (exit-code asserting), Forge config w/ Squirrel+zip+deb, fuses,
+  app identity via `NNB_APP_NAME`/`NNB_EXECUTABLE`/`NNB_ICON` env (CLI fills later).
+  UI-in-asar contract: adapter serves `www/` inside app.asar (`files` glob); the
+  fs-extra postPackage copy is gone (9.1/3); UI sync belongs to `nnb build` (CLI, next).
+  Module seam: `window.nnb?.exit()` branch in `useNativeApp().exit()` + `NnbElectronApi`.
+  Deleted after extraction (recoverable @7cbaf6d): `playground/my-app/` (incl. dead vite
+  configs), `scripts/copy-dist.mjs`, `playground/.npmrc`, `make:electron` script.
+  Gates: adapter tests 12/12, adapter lint 0, module lint 0, module test 1/1, smoke
+  fixture PASS, integration smoke (playground build via `NNB_UI_DIR` + `NNB_SMOKE_EXPECT`)
+  PASS. Next: step 4 `nnb` CLI; step 5 icon generator parameterization (BRAND_BG marked).
 

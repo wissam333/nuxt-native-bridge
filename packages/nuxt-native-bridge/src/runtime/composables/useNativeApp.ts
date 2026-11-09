@@ -36,13 +36,18 @@ export function useNativeApp(): NativeApp {
   const onPause = (cb: () => void) => listen(pauseHandlers, cb)
 
   const exit = async () => {
-    // No handlers registered: the user has nothing to confirm — exit directly.
-    if (exitHandlers.length === 0) {
-      const { App } = await import('@capacitor/app')
-      await App.exitApp()
+    // Handlers registered: the app owns the exit UX (confirm, app-lock, …).
+    if (exitHandlers.length > 0) {
+      for (const cb of [...exitHandlers]) cb()
       return
     }
-    for (const cb of [...exitHandlers]) cb()
+    // Electron shell: the preload API (window.nnb) is the exit seam.
+    if (import.meta.client && window.nnb) {
+      window.nnb.exit()
+      return
+    }
+    const { App } = await import('@capacitor/app')
+    await App.exitApp()
   }
 
   return { onExitRequested, onResume, onPause, exit }

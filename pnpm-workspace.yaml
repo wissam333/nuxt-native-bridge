@@ -1,0 +1,15 @@
+packages:
+  - packages/*
+  - packages/*/playground
+
+# pnpm 12: build approvals for native postinstall scripts.
+allowBuilds:
+  esbuild: true
+  "@parcel/watcher": true
+  electron: true
+  electron-winstaller: true
+
+# @electron/node-gyp (Forge's native-rebuild chain) resolves via a git URL;
+# pnpm 12 blocks git subdependencies by default — Forge officially needs this one.
+blockExoticSubdeps: false
+

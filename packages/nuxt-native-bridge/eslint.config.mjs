@@ -25,7 +25,6 @@ export default createConfigForNuxt({
         '**/.nuxt/**',
         '**/dist/**',
         'playground/android/**',
-        'playground/my-app/**',
         '**/public/**',
       ],
     },
