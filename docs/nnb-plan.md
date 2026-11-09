@@ -99,4 +99,12 @@ Acceptance (spec): playground builds web, Electron and Android using only the mo
   `onExitRequested`. Web + android generates fingerprint-verified (boot script + base css in
   bundle; ssr:false/static preset on android only); `nuxt dev` HTTP 200; lint 0 problems;
   template test 1/1.
+- **2026-11-09** — Repo published to GitHub (`wissam333/nuxt-native-bridge`, public) at commit
+  `7cbaf6d` (148 files). Pre-publish cleanup: stale `my-app/public_nuxt/` wallet build copy and
+  `android/app/google-services.json` deleted (user-approved); keystores stay on disk but are
+  gitignored at root AND android level. Dropped the nested `packages/nuxt-native-bridge/.git`
+  (npm create nuxt scaffold — it blocked `git add` root-wide). `.opencode/`, `.agents/`,
+  `.history/` added to root .gitignore (agent/IDE residue). `git user.name` set to
+  "Wissam Najjom". Fresh-clone release builds fail without the keystore — release policy
+  pending (see docs/android-release.md).
 
