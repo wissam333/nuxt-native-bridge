@@ -1,0 +1,7 @@
+{
+  "name": "adapter-capacitor",
+  "version": "0.0.0",
+  "private": true,
+  "description": "NNB adapter-capacitor: Android bridge library (NnbBridgeActivity, theme/insets plugins) included by app Gradle builds.",
+  "license": "MIT"
+}

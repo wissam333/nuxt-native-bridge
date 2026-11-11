@@ -10,6 +10,11 @@ dependencyResolutionManagement {
     }
 }
 
+// nnb:bridge-library — generated wiring, rewritten by nnb sync
+include ':nnb-bridge'
+project(':nnb-bridge').projectDir = new File('../../../adapter-capacitor/android')
+// /nnb:bridge-library
+
 include ':app'
 include ':capacitor-cordova-android-plugins'
 project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
