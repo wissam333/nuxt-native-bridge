@@ -2,6 +2,7 @@ import { defineNuxtPlugin, useRouter, useRuntimeConfig, useNuxtApp } from '#impo
 import { useNativePlatform } from './composables/useNativePlatform'
 import { useBackButton } from './composables/useBackButton'
 import { useNativeAppRegistry, useNativeApp } from './composables/useNativeApp'
+import { computeSplashPlan } from './splash'
 import type { NnbPublicRuntimeConfig } from './types'
 
 /**
@@ -26,25 +27,39 @@ export default defineNuxtPlugin(() => {
   const reg = useNativeAppRegistry()
   const { handlerStack } = useBackButton()
   const nativeApp = useNativeApp()
-
-  // Splash: hide with a clean fade as soon as we can, with a failsafe so a
-  // stalled boot never leaves the splash stuck (audit item 19).
-  const failsafe = setTimeout(hideSplash, 8000)
-  async function hideSplash() {
-    clearTimeout(failsafe)
-    try {
-      const { SplashScreen } = await import('@capacitor/splash-screen')
-      await SplashScreen.hide({ fadeOutDuration: 300 })
-    }
-    catch (err) {
-      console.warn('[nnb] splash hide failed:', err)
-    }
-  }
-  hideSplash()
+  const nuxtApp = useNuxtApp()
 
   // Runtime config gets its values baked by the module at build time.
   const nativeBridge = (useRuntimeConfig().public as NnbPublicRuntimeConfig).nativeBridge
   const exitRoutes: string[] = nativeBridge?.backButton?.exitRoutes ?? ['/']
+
+  // Splash (audit 19): module-owned, android only — electron/web have no
+  // splash concept. The failsafe is registered at plugin SETUP so a stalled
+  // boot still hides; the real hide waits for app:mounted so users see
+  // rendered content instead of a blind timer.
+  if (target === 'android') {
+    const plan = computeSplashPlan(nativeBridge?.android?.splash)
+    let hidden = false
+    async function hideSplash() {
+      if (hidden) return
+      hidden = true
+      clearTimeout(failsafe)
+      try {
+        const { SplashScreen } = await import('@capacitor/splash-screen')
+        await SplashScreen.hide({ fadeOutDuration: plan.fade })
+      }
+      catch (err) {
+        console.warn('[nnb] splash hide failed:', err)
+      }
+    }
+    const failsafe = setTimeout(hideSplash, plan.failsafe)
+    if (plan.hideOnMounted) {
+      nuxtApp.hook('app:mounted', hideSplash)
+    }
+    else {
+      hideSplash()
+    }
+  }
 
   async function wireNative() {
     if (target !== 'android') return
@@ -74,7 +89,6 @@ export default defineNuxtPlugin(() => {
 
   // Remove every listener when the app unmounts so re-runs (HMR or teardown)
   // cannot stack handlers (audit item 24).
-  const nuxtApp = useNuxtApp()
   nuxtApp.hook('app:unmount', () => {
     import('@capacitor/app')
       .then(({ App }) => App.removeAllListeners())

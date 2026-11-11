@@ -13,8 +13,9 @@ const config: CapacitorConfig = {
       presentationOptions: ['badge', 'sound', 'alert'],
     },
     SplashScreen: {
-      launchShowDuration: 2000,
-      launchAutoHide: true,
+      // The nnb module owns the splash hide (fade + failsafe, audit 19);
+      // native auto-hide is off so the splash drops when the app is ready.
+      launchAutoHide: false,
       androidSplashResourceName: 'splash',
       showSpinner: false,
     },
