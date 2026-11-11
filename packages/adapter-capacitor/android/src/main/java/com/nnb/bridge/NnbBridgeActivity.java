@@ -39,6 +39,10 @@ public class NnbBridgeActivity extends BridgeActivity {
 
         super.onCreate(savedInstanceState);
 
+        // Insets provider for useNativeSafeArea (audit 20) — registered by the
+        // bridge itself, app code never wires it.
+        registerPlugin(NnbInsetsPlugin.class);
+
         // Edge-to-edge (one native path; CSS handles the rest) and the
         // contrast values the starter tuned (both flags off).
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
