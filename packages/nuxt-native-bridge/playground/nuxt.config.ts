@@ -63,6 +63,12 @@ export default defineNuxtConfig({
       android: { glyph: 'public/3.png', background: ['#139CAE', '#0C6271'], glyphFraction: 0.5 },
       splash: 'public/4.png',
     },
+    android: {
+      splash: { hideOn: 'mounted', fade: 300, failsafe: 8000, light: '#0D8A8F', dark: '#0B1416' },
+      mavenMirrors: ['https://maven.aliyun.com/repository/google', 'https://maven.aliyun.com/repository/central'],
+      // audit 14: app-level permissions are opt-in; plugin manifests add their own
+      permissions: [],
+    },
     baseStyles: true,
     backButton: { exitRoutes: ['/'] },
   },

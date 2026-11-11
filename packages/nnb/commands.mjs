@@ -7,6 +7,7 @@ import {
   resolveElectronPath, run, syncDir, waitPort,
 } from './lib.mjs'
 import { buildIcons } from './icons.mjs'
+import { nativeSync } from './native-sync.mjs'
 
 const appDir = () => process.cwd()
 
@@ -105,6 +106,9 @@ export async function buildElectron(opts = {}) {
 // ---------------------------------------------------------------------------
 export async function sync() {
   await run('npx', ['cap', 'sync', 'android'], { cwd: appDir() })
+  // Config-derived native files (themes, manifest, mirrors) after cap sync.
+  const cfg = await readAppConfig(appDir())
+  nativeSync(appDir(), cfg.config.nativeBridge)
 }
 
 // ---------------------------------------------------------------------------

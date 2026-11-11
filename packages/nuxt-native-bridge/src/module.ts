@@ -7,6 +7,11 @@ export interface ModuleOptions {
   baseStyles: boolean
   safeArea: { topMin: string, bottomMin: string }
   backButton: { exitRoutes: string[] }
+  android?: {
+    splash?: { hideOn?: string, fade?: number, failsafe?: number, light?: string, dark?: string }
+    mavenMirrors?: string[]
+    permissions?: string[]
+  }
 }
 
 // Build target for this generation: web default; electron/android go static+SPA.
