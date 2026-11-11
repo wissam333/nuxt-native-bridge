@@ -173,4 +173,6 @@ Acceptance (spec): playground builds web, Electron and Android using only the mo
   BUILD SUCCESSFUL in 2s with fresh APK (FROM-CACHE + parallel config working).
   Next: Phase 2 module work (keyboard, theme, viewport) in the module; then
   adapter-capacitor extraction; `nnb init` only when a second consumer app needs it.
+- **2026-11-11** — Phase 1 fully planned in `docs/nnb-phase1-plan.md` (T1-T9 with
+  gates; Phase 2/3 sequenced there too, each gets its own plan on arrival).
 
