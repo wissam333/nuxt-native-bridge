@@ -4,6 +4,8 @@ import type { Nuxt } from '@nuxt/schema'
 export interface ModuleOptions {
   app: { id: string, name: string }
   brand: { color: string }
+  /** API origin for native builds; web keeps the app's own config (T5). */
+  apiBase?: string
   baseStyles: boolean
   safeArea: { topMin: string, bottomMin: string }
   backButton: { exitRoutes: string[] }

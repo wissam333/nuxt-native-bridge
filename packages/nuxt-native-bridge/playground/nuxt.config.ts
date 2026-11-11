@@ -58,6 +58,7 @@ export default defineNuxtConfig({
   nativeBridge: {
     app: { id: 'com.arselha.demo', name: 'NNB Playground' },
     brand: { color: '#0D8A8F' },
+    apiBase: 'https://api.arselha.demo',
     icons: {
       source: 'public/square-logo.png',
       android: { glyph: 'public/3.png', background: ['#139CAE', '#0C6271'], glyphFraction: 0.5 },
