@@ -1,6 +1,6 @@
 // nnb — nuxt-native-bridge CLI. argv dispatch only; logic lives in commands.mjs.
 // Usage: nnb <command> <target> [--flags]. See help for the current Phase 0 set.
-import { devElectron, buildElectron, buildAndroid, sync, icons, doctor } from './commands.mjs'
+import { devElectron, devWeb, buildElectron, buildAndroid, sync, icons, doctor } from './commands.mjs'
 
 const [cmd, target, ...flags] = process.argv.slice(2)
 const opts = {
@@ -10,6 +10,8 @@ const opts = {
 
 const HELP = `nnb — nuxt-native-bridge CLI (Phase 0)
 
+  nnb dev web                Nuxt dev server for the plain web target (no
+                             NUXT_TARGET in the child env)
   nnb dev electron           Nuxt dev server (HMR) inside the Electron shell
   nnb build electron [--installer]   static UI build → www sync → Forge package
                              (--installer adds the Squirrel installer pass)
@@ -28,6 +30,9 @@ export function main() {
 
   if (has('dev', 'electron')) {
     devElectron(opts)
+  }
+  else if (has('dev', 'web')) {
+    devWeb(opts)
   }
   else if (has('build', 'electron')) {
     buildElectron(opts)

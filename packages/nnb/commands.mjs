@@ -55,6 +55,55 @@ export async function devElectron(opts = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// nnb dev web — plain web dev server, no NUXT_TARGET in the child env.
+// ---------------------------------------------------------------------------
+export async function devWeb(opts = {}) {
+  const port = opts.port || 3000
+  // Plan T6: NUXT_TARGET may leak from a caller's shell — `dev web` is always
+  // target-less so the app keeps its own web config (audit item 36).
+  const cleanEnv = { ...process.env }
+  delete cleanEnv.NUXT_TARGET
+  log(`starting Nuxt dev server (port ${port}, web target)…`)
+  const server = spawn('npx', ['nuxt', 'dev', '--port', String(port)], {
+    cwd: appDir(),
+    env: cleanEnv,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  })
+
+  const devUrl = `http://localhost:${port}/`
+  if (!(await waitPort(port))) {
+    killTree(server)
+    fail(`dev server did not listen on ${port} within 120s`)
+  }
+  log(`dev server ready — ${devUrl}`)
+
+  // Same smoke contract as the packaged electron app (spec §11-1): the page
+  // must come up carrying the expected marker. TCP listen ≠ HTTP ready —
+  // Nitro builds AFTER the port opens, so retry until served or timeout.
+  if (process.env.NNB_SMOKE) {
+    const expected = process.env.NNB_SMOKE_EXPECT || 'nnb-smoke'
+    const deadline = Date.now() + 30_000
+    let served = false
+    while (Date.now() < deadline && !served) {
+      try {
+        const html = await (await fetch(devUrl)).text()
+        served = html.includes(expected)
+      }
+      catch { /* warmup: connection refused or empty — retry */ }
+      if (!served) await new Promise(r => setTimeout(r, 1000))
+    }
+    log(served ? 'smoke ok' : `smoke failed: expected ${JSON.stringify(expected)} in the served page`)
+    process.exitCode = served ? 0 : 1
+    killTree(server)
+    return
+  }
+
+  // Stays in the foreground for the user; Ctrl+C ends it.
+  server.on('exit', () => log('dev server stopped'))
+}
+
+// ---------------------------------------------------------------------------
 // nnb build electron — generate → sync UI → Forge package/make (cross-platform).
 // --installer adds the Squirrel installer pass (slower).
 // ---------------------------------------------------------------------------
