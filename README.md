@@ -24,15 +24,20 @@ docs/                            plan + notes (docs/nnb-plan.md = current workin
 
 ## Status
 
-- `nnb` CLI (Phase 0 set) verified end-to-end: `doctor` 7/7; `build electron`
-  → packaged app; `--installer` → Squirrel setup exe; `dev electron` → real HMR
-  inside the shell (`NNB_SMOKE` probe asserts the served title); `build android`
-  → `app-debug.apk` (Gradle mirrors + warm-daemon tuning; Android Studio not needed).
-- Module skeleton implemented and verified (web + android generates, dev server).
-- adapter-electron extracted; unit-tested path resolver, smoke-tested against the
-  playground build; dev-server mode added for `nnb dev electron`.
-- Android APK verified via the CLI; adapter-capacitor extraction pending.
-- `nnb icons` verified: config-driven (spec §5 `nativeBridge.icons` + `brand.color`
-  as the audit-13 plate source), outputs byte-identical to the old hardcoded
-  script; launcher/splash re-verified in the Android build. `.icns` is Phase 2.
+- **Phase 1 complete** (per-task record in `docs/nnb-plan.md` §7):
+  - `nnb init` scaffolds a Nuxt app for all three targets (config block, deps,
+    capacitor.config, thin MainActivity, thin electron main, native files via sync).
+  - `packages/adapter-capacitor/android` extracted: shared bridge library
+    (`NnbBridgeActivity`, splash ownership, insets plugin) that init/sync wire in.
+  - `nnb sync` regenerates the native files nnb owns (themes, manifest, mirrors,
+    splash drawables) idempotently, preserving app-authored content outside markers.
+  - Module: `apiBase` per target (web off, android/electron on), splash hide on
+    `app:mounted`, `useSafeArea()` from the insets plugin.
+  - Verified end-to-end on a throwaway app: `dev web` smoke, packaged electron
+    (fuses asserted), `build android` → `app-debug.apk`. Device-level checks
+    (splash timing, real insets, back button) are Phase 1 T9, user-assisted.
+- Phase 0 (all verified): `nnb` CLI `doctor` 7/7; `build electron` → packaged app +
+  Squirrel installer; `dev electron` → real HMR inside the shell; `build android` →
+  APK (Gradle mirrors + warm-daemon tuning; Android Studio not needed); `nnb icons`
+  config-driven (spec §5; `.icns` is Phase 2).
 - Next: Phase 2 module work (keyboard, theme; see `docs/nnb-plan.md`).
