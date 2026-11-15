@@ -14,6 +14,17 @@ export const fail = (msg) => {
   process.exit(1)
 }
 
+// Android SDK discovery (same order doctor reports): ANDROID_HOME, then the
+// common Windows locations. Returns null when none exists.
+export function findSdk() {
+  const candidates = [
+    process.env.ANDROID_HOME,
+    'C:\\Android\\Sdk',
+    path.join(process.env.LOCALAPPDATA ?? '', 'Android', 'Sdk'),
+  ].filter(Boolean)
+  return candidates.find(dir => fs.existsSync(dir)) || null
+}
+
 // Inherits stdio so tool output streams to the user (nuxt, forge, gradle).
 export function run(cmd, args, opts = {}) {
   log(`$ ${cmd} ${args.join(' ')}${opts.cwd ? ` (in ${path.basename(opts.cwd)}/)` : ''}`)

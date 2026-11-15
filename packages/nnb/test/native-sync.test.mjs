@@ -2,7 +2,7 @@
 // permission markers (idempotent), allowBackup=false + dataExtractionRules.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { renderThemes, renderManifestPatch, renderDataExtractionRules, renderSettingsPatch } from '../native-sync.mjs'
+import { renderThemes, renderManifestPatch, renderDataExtractionRules, renderSettingsPatch, renderBuildscriptPatch, renderRootGradleTools, renderSplashColors, renderSplashDrawables } from '../native-sync.mjs'
 
 const CFG = {
   brand: { color: '#0D8A8F' },
@@ -85,6 +85,72 @@ test('renderSettingsPatch replaces the mirror block between markers, idempotent'
   const twice = renderSettingsPatch(once, ['https://mirror-b.example.com/m2'])
   assert.match(twice, /mirror-b\.example\.com/)
   assert.doesNotMatch(twice, /aliyun/)
+})
+
+test('renderSettingsPatch adds dependencyResolutionManagement when the template has no repositories', () => {
+  // cap-8 template: only project includes, no repositories anywhere
+  const cap8 = `include ':app'\nproject(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')\n`
+  const out = renderSettingsPatch(cap8, ['https://maven.aliyun.com/repository/google'])
+  assert.match(out, /^dependencyResolutionManagement \{/)
+  assert.match(out, /PREFER_SETTINGS/)
+  assert.match(out, /nnb:maven-mirrors[\s\S]*aliyun[\s\S]*nnb:maven-mirrors\n {8}google\(\)/)
+  // project includes preserved after the new block
+  assert.match(out, /\ninclude ':app'/)
+  // idempotent
+  assert.equal(renderSettingsPatch(out, ['https://maven.aliyun.com/repository/google']), out)
+})
+
+test('renderBuildscriptPatch mirrors the buildscript repositories block', () => {
+  const gradle = `buildscript {\n    repositories {\n        google()\n        mavenCentral()\n    }\n    dependencies {\n        classpath 'com.android.tools.build:gradle:8.13.0'\n    }\n}\n\nallprojects {\n    repositories {\n        google()\n    }\n}\n`
+  const out = renderBuildscriptPatch(gradle, ['https://maven.aliyun.com/repository/google'])
+  // first repositories block (buildscript) marked, google() kept after it
+  assert.match(out, /buildscript \{\n {4}repositories \{\n {8}\/\/ nnb:maven-mirrors[\s\S]*aliyun[\s\S]*nnb:maven-mirrors\n {8}google\(\)/)
+  // allprojects block untouched (PREFER_SETTINGS governs dependency repos)
+  assert.match(out, /allprojects \{\n {4}repositories \{\n {8}google\(\)/)
+  // idempotent + mirrors update between markers
+  const twice = renderBuildscriptPatch(out, ['https://mirror-b.example.com/m2'])
+  assert.match(twice, /mirror-b\.example\.com/)
+  assert.doesNotMatch(twice, /aliyun/)
+})
+
+test('renderRootGradleTools appends the subprojects build-tools override, idempotent', () => {
+  const gradle = `buildscript {\n    repositories {\n        google()\n    }\n}\n\ntask clean(type: Delete) {\n    delete rootProject.buildDir\n}\n`
+  const out = renderRootGradleTools(gradle)
+  assert.match(out, /nnb:build-tools[\s\S]*subprojects \{[\s\S]*rootProject\.ext\.has\('buildToolsVersion'\)[\s\S]*nnb:build-tools/)
+  // appended after the clean task, not before it
+  assert.match(out, /task clean[\s\S]*nnb:build-tools/)
+  // idempotent
+  assert.equal(renderRootGradleTools(out), out)
+})
+
+test('renderSplashColors creates the colors file and updates its own markers', () => {
+  const fresh = renderSplashColors(null, { light: '#0D8A8F', dark: '#0B1416' })
+  assert.match(fresh, /^<\?xml version="1\.0" encoding="utf-8"\?>\n<resources>/)
+  assert.match(fresh, /<color name="splash_bg">#0D8A8F<\/color>/)
+  assert.match(fresh, /<color name="splash_bg_dark">#0B1416<\/color>/)
+  // idempotent
+  assert.equal(renderSplashColors(fresh, { light: '#0D8A8F', dark: '#0B1416' }), fresh)
+  // marked run with new colors replaces between markers
+  const updated = renderSplashColors(fresh, { light: '#111111', dark: '#222222' })
+  assert.match(updated, /splash_bg">#111111/)
+  assert.doesNotMatch(updated, /#0D8A8F/)
+  // hand-written colors.xml: splash colors appended in markers, own entries kept
+  const hand = '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="brand">#ABCDEF</color>\n</resources>\n'
+  const handOut = renderSplashColors(hand, { light: '#0D8A8F', dark: '#0B1416' })
+  assert.match(handOut, /<color name="brand">#ABCDEF<\/color>/)
+  assert.match(handOut, /<color name="splash_bg">#0D8A8F<\/color>/)
+  assert.equal(renderSplashColors(handOut, { light: '#0D8A8F', dark: '#0B1416' }), handOut)
+})
+
+test('renderSplashDrawables: no logo = plain color splash; logo = bitmap + inset icon', () => {
+  const plain = renderSplashDrawables({ light: '#0D8A8F', dark: '#0B1416', hasLogo: false })
+  assert.match(plain['splash.xml'], /<color android:color="@color\/splash_bg" \/>/)
+  assert.doesNotMatch(plain['splash.xml'], /splash_logo/)
+  assert.match(plain['splash_dark.xml'], /@color\/splash_bg_dark/)
+  assert.match(plain['splash_icon.xml'], /<layer-list[^>]*\/>/)
+  const logo = renderSplashDrawables({ light: '#0D8A8F', dark: '#0B1416', hasLogo: true })
+  assert.match(logo['splash.xml'], /<bitmap android:src="@drawable\/splash_logo" android:gravity="fill" \/>/)
+  assert.match(logo['splash_icon.xml'], /android:inset="20%"/)
 })
 
 test('renderThemes replaces a marker-less styles.xml wholesale — no duplicate styles', () => {
