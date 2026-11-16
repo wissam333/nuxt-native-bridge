@@ -106,10 +106,3 @@ docs/                   plan, progress ledger, compatibility matrix
 | [`docs/nnb-phase1-plan.md`](docs/nnb-phase1-plan.md) | Phase 1 task breakdown (T1–T9) with gates |
 | [`docs/compatibility.md`](docs/compatibility.md) | Tested versions: Nuxt 4.x, Capacitor 8.x, Electron/Forge, JDK 21, targetSdk 36 |
 | [`nuxt-native-bridge Full Specification and Roadmap.md`](./nuxt-native-bridge%20Full%20Specification%20and%20Roadmap.md) | The full product spec |
-
----
-
-<p align="center">
-  <sub>Name decision (2026-11-09): package stays <strong>nuxt-native-bridge</strong> (descriptive, searchable,
-  npm-verified free); the brand lives in the tagline and the <code>nnb</code> CLI name.</sub>
-</p>
