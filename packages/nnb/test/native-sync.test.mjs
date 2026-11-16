@@ -153,6 +153,14 @@ test('renderSplashDrawables: no logo = plain color splash; logo = bitmap + inset
   assert.match(logo['splash_icon.xml'], /android:inset="20%"/)
 })
 
+test('renderThemes emits values-night styles — T9: Android 12+ draws the cold-start splash from resources before the process runs, so the runtime dark pref can never repaint it; splash follows system night', () => {
+  const { stylesNightXml } = renderThemes(CFG)
+  assert.match(stylesNightXml, /name="AppTheme\.NoActionBarLaunch"/)
+  assert.match(stylesNightXml, /windowSplashScreenBackground">#0B1416/)
+  assert.match(stylesNightXml, /android:windowLightStatusBar">false/)
+  assert.match(stylesNightXml, /@drawable\/splash_dark/)
+})
+
 test('renderThemes replaces a marker-less styles.xml wholesale — no duplicate styles', () => {
   const plain = '<?xml version="1.0" encoding="utf-8" ?>\n<resources>\n\n    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar" />\n\n</resources>\n'
   const migrated = renderThemes(CFG, plain).stylesXml

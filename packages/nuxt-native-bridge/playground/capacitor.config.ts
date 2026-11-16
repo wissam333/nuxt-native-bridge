@@ -1,9 +1,10 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  // appId is permanent (store / installs) — do not change
-  appId: 'arselhawallet.com',
-  appName: 'أرسلها',
+  // Playground identity — its OWN id, never a product's (T9: installing a
+  // demo under a product's id can overwrite/wipe that product on the device).
+  appId: 'com.nnb.playground',
+  appName: 'NNB Playground',
   webDir: '.output/public',
   plugins: {
     CapacitorHttp: {
@@ -15,7 +16,10 @@ const config: CapacitorConfig = {
     SplashScreen: {
       // The nnb module owns the splash hide (fade + failsafe, audit 19);
       // native auto-hide is off so the splash drops when the app is ready.
+      // hide()'s fadeOutDuration is IGNORED for the initial splash on
+      // Android (T9 device finding) — the fade lives here instead.
       launchAutoHide: false,
+      launchFadeOutDuration: 300,
       androidSplashResourceName: 'splash',
       showSpinner: false,
     },

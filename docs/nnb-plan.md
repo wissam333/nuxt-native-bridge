@@ -229,4 +229,57 @@ Acceptance (spec): playground builds web, Electron and Android using only the mo
   exe run blocked by machine WDAC for new unsigned binaries — the T6 exe from the
   identical pipeline still runs green); `nnb build android` → BUILD SUCCESSFUL 7m45s,
   app-debug.apk produced.
+- **2026-11-15** — Phase 1 T8 (docs, backfilled — its own §7 paragraph was skipped when
+  the commit landed): `docs/compatibility.md` stub table pinned (Nuxt 4.x, Electron/Forge
+  current, Capacitor 8.x, JDK 21, targetSdk 36); root README status → Phase 1 in progress.
+- **2026-11-15/16** — Phase 1 T9: §11 device verification batch (user's Xiaomi
+  24117RN76G, Android 16 API 36, MIUI/HyperOS, 450dpi dpr 2.8125). SEVEN REAL DEFECTS,
+  all fixed + device-verified:
+  1. **Bridge plugin registration order** — Capacitor 8 `registerPlugin` only QUEUES on
+     `Bridge.Builder`; the bridge is built inside `super.onCreate`, so late registration
+     silently no-ops. Bridge-owned plugins (NnbInsets) must register BEFORE
+     `super.onCreate`. Device log now shows `Registering plugin instance: NnbInsets`.
+  2. **Insets unit conversion** — Android WindowInsets are NATIVE px; writing them into
+     CSS vars verbatim is ~3× too big. `nativeToCssInsets` (round(px ÷ devicePixelRatio))
+     in `useNativeSafeArea`, unit-pinned; device: 110px cutout → `[nnb-insets]
+     {"top":39,"bottom":47}` (the guessed 32px fallback was burying the title).
+  3. **Playground identity** — package id `arselhawallet.com` → `com.nnb.playground`,
+     label "NNB Playground" (capacitor.config, applicationId+namespace, strings.xml, java
+     packages). Disclosed: an earlier adb install/update ran against the REAL app's id —
+     old install uninstalled; splash LOGO still shows the old أرسلها brand (asset from the
+     previous `nnb icons` run — needs a user-supplied NNB logo + rerun).
+  4. **Splash fade config** — `SplashScreen.hide({fadeOutDuration})` is IGNORED for the
+     initial splash on Android; fade lives in `launchFadeOutDuration: 300` (playground +
+     init template, test-pinned). Benign "fadeOutDuration doesn't work on initial splash"
+     warning remains.
+  5. **Launch theme names are DOTTED** — sync generates `AppTheme.NoActionBarLaunch[Dark]`
+     (cap-template convention); the bridge's `getIdentifier` looked up underscore names →
+     0 → `setTheme` silently skipped → splash never followed the dark pref. Fixed to
+     dotted (still insufficient for the SYSTEM splash — ruling below).
+  6. **Capacitor plugin proxy must never resolve a promise** — playground `useTheme`
+     re-registered ThemePrefs per tap (harmless warning), then the first cache fix
+     returned the proxy from an async fn → the promise machinery called `proxy.then` →
+     `ThemePrefs.then() is not implemented` + the await HUNG → `setDark` silently stopped
+     firing. Ruling: cache the proxy at module level, load it inline, never return it
+     from an async fn. Device: `setDark {"dark":true|false}` both succeed.
+  7. **Demo shell had zero styles** — `demo-*` classes existed in templates only (header
+     at y=0 under the camera; swatch taps invisible). Demo stylesheet appended to
+     `main.scss` consuming the safe-area tokens + `var(--primary)`.
+  **PLATFORM RULING (user decision):** Android 12+ draws the cold-start splash from
+  resources resolved BEFORE the process runs — the runtime ThemePrefs can never recolor
+  it (proven on device: pref dark=true + dotted setTheme still booted the green splash).
+  Shipped: sync now also generates `values-night/styles.xml` (same style names, dark
+  colors, `windowLightStatusBar false`, splash_dark) → the splash follows SYSTEM night
+  mode; app content + the window behind the splash follow ThemePrefs. The mismatch case
+  (system dark + app manually set light → dark splash, light app) was surfaced with
+  on-device screencaps and ACCEPTED by the user ("Follow system dark mode" chosen over
+  always-green / app-follows-system / minimal-splash). Phase 2 `useNativeTheme` amended:
+  drop the "pref overrides system for the launch splash" goal; ThemePrefs keeps driving
+  app content and the behind-window.
+  Gates: nnb tests 26/26 (new values-night test); module vitest 13/13 (`nativeToCssInsets`
+  added); lint 0; warm device chain (NUXT_TARGET=android nuxt generate → nnb build
+  android) green in ~7s; device items 4 + 5 VERIFIED GREEN with the user: status-bar
+  icons readable in both app modes; back navigates home and the styled exit modal
+  shows at home. Launcher icon confirmed updated on the home screen (v6, versionCode
+  bump refreshed the splash/launcher caches).
 

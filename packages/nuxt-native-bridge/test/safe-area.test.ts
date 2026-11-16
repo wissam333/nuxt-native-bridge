@@ -4,7 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useNativePlatform } from '../src/runtime/composables/useNativePlatform'
-import { applySafeAreaVars, useNativeSafeArea } from '../src/runtime/composables/useNativeSafeArea'
+import { applySafeAreaVars, nativeToCssInsets, useNativeSafeArea } from '../src/runtime/composables/useNativeSafeArea'
 
 vi.mock('../src/runtime/composables/useNativePlatform', () => ({
   useNativePlatform: vi.fn(),
@@ -19,6 +19,17 @@ function fakeDoc() {
 
 beforeEach(() => {
   mockPlatform.mockReset()
+})
+
+describe('nativeToCssInsets', () => {
+  it('divides native px by the device pixel ratio and rounds (T9: 110 native px on a 450dpi device is 39 CSS px, not 110px)', () => {
+    expect(nativeToCssInsets({ top: 110, bottom: 24 }, 2.8125)).toEqual({ top: 39, bottom: 9 })
+    expect(nativeToCssInsets({ top: 100, bottom: 0 }, 2)).toEqual({ top: 50, bottom: 0 })
+  })
+
+  it('dpr 1 leaves values untouched', () => {
+    expect(nativeToCssInsets({ top: 24, bottom: 32 }, 1)).toEqual({ top: 24, bottom: 32 })
+  })
 })
 
 describe('applySafeAreaVars', () => {

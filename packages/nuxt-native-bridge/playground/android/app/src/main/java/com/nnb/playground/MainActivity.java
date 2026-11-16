@@ -1,4 +1,4 @@
-package arselhawallet.com;
+package com.nnb.playground;
 
 import android.os.Bundle;
 import com.nnb.bridge.NnbBridgeActivity;

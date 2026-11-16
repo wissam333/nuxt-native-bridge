@@ -70,8 +70,11 @@ const config: CapacitorConfig = {
   webDir: '.output/public',
   plugins: {
     SplashScreen: {
-      // The nnb module owns the splash hide (audit 19).
+      // The nnb module owns the splash hide (audit 19). The fade for the
+      // INITIAL splash is launchFadeOutDuration — hide()'s fadeOutDuration
+      // is ignored on Android (T9 device finding).
       launchAutoHide: false,
+      launchFadeOutDuration: 300,
     },
   },
   android: {

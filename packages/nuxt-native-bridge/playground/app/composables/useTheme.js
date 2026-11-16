@@ -1,3 +1,6 @@
+// Module-level so every useTheme() instance shares one registerPlugin call.
+let themePrefsPlugin
+
 export const useTheme = () => {
   // Brand teal from owner screenshot / square logo
   const BRAND_PRIMARY = '#0D8A8F'
@@ -94,16 +97,16 @@ export const useTheme = () => {
     persistNativeTheme(dark)
   }
 
-  // Mirror the app-level theme into native SharedPreferences so the Android
-  // splash (rendered before the webview boots) matches the app's own theme
-  // instead of the system dark-mode setting.
+  // T9: see module-level cache note above — never resolve an async fn with
+  // the plugin proxy (proxy.then becomes a bridge call and hangs the await).
   const persistNativeTheme = async (dark) => {
     if (!import.meta.client) return
     try {
-      const { Capacitor, registerPlugin } = await import('@capacitor/core')
-      if (!Capacitor.isNativePlatform()) return
-      const ThemePrefs = registerPlugin('ThemePrefs')
-      await ThemePrefs.setDark({ dark })
+      if (themePrefsPlugin === undefined) {
+        const { Capacitor, registerPlugin } = await import('@capacitor/core')
+        themePrefsPlugin = Capacitor.isNativePlatform() ? registerPlugin('ThemePrefs') : null
+      }
+      if (themePrefsPlugin) await themePrefsPlugin.setDark({ dark })
     }
     catch (e) {
       console.warn('ThemePrefs persist failed', e)

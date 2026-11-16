@@ -47,6 +47,33 @@ export function renderThemes(cfg, existing = null) {
     </style>
     <!-- /nnb:styles -->`
 
+  // values-night: on Android 12+ the SYSTEM draws the cold-start splash from
+  // resources resolved at window creation — before any code runs — so the
+  // app's runtime dark pref can never repaint it (T9 device finding: pref
+  // dark + dotted setTheme still booted the green splash). The achievable
+  // behavior is resource-driven: when system night mode is on, these same
+  // style names resolve dark. The runtime setTheme(dark) in
+  // NnbBridgeActivity still themes the window BEHIND the splash and pre-31
+  // devices, so it stays.
+  const generatedNight = `    <!-- nnb:styles-night — dark resolution of the launch styles, rewritten by nnb sync -->
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowBackground">${splash.dark}</item>
+        <item name="android:navigationBarColor">${brand}</item>
+    </style>
+
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="android:background">@drawable/splash_dark</item>
+        <item name="android:windowBackground">${splash.dark}</item>
+        <item name="windowSplashScreenBackground">${splash.dark}</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>`
+
+  const nightFile = `<?xml version="1.0" encoding="utf-8" ?>\n<resources>\n\n${generatedNight}\n</resources>\n`
+
   const BASE_APP_THEME = `    <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
@@ -59,7 +86,7 @@ export function renderThemes(cfg, existing = null) {
     // consumes the leading indent so re-indentation can never accumulate.
     const m = /^[ \t]*<!-- nnb:styles[\s\S]*?<!-- \/nnb:styles -->$/m.exec(existing)
     if (m) {
-      return { stylesXml: existing.replace(m[0], generated.trimEnd()) }
+      return { stylesXml: existing.replace(m[0], generated.trimEnd()), stylesNightXml: nightFile }
     }
   }
   // First run (or marker-less file): replace wholesale — the template styles
@@ -68,6 +95,8 @@ export function renderThemes(cfg, existing = null) {
   // wholesale first-run replace, user edits kept from run 2 via markers).
   return {
     stylesXml: `<?xml version="1.0" encoding="utf-8" ?>\n<resources>\n\n${BASE_APP_THEME}\n\n${generated}\n</resources>\n`,
+    // values-night/styles.xml is wholly generated (no user content to preserve)
+    stylesNightXml: nightFile,
   }
 }
 
@@ -234,7 +263,9 @@ export function nativeSync(appDir, nativeBridge, log = console.log) {
   let changed = 0
 
   const stylesPath = path.join(res, 'values', 'styles.xml')
-  changed += writeIfChanged(stylesPath, renderThemes(nativeBridge, readMaybe(stylesPath)).stylesXml)
+  const themes = renderThemes(nativeBridge, readMaybe(stylesPath))
+  changed += writeIfChanged(stylesPath, themes.stylesXml)
+  changed += writeIfChanged(path.join(res, 'values-night', 'styles.xml'), themes.stylesNightXml)
 
   const manifestPath = app('android/app/src/main/AndroidManifest.xml')
   changed += writeIfChanged(manifestPath, renderManifestPatch(readMaybe(manifestPath), nativeBridge.android?.permissions))

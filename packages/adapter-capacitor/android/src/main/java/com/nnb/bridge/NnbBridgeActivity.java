@@ -13,9 +13,9 @@ import com.getcapacitor.BridgeActivity;
  * extend this and only register app-local plugins.
  *
  * Launch themes are APP resources generated from brand/splash config by
- * `nnb sync` under fixed names (AppTheme_NoActionBarLaunch / ...Dark) —
- * resolved by convention with getIdentifier, since a library cannot
- * reference the app's R class.
+ * `nnb sync` under fixed names (AppTheme.NoActionBarLaunch / ...Dark,
+ * dotted as the cap template spells them) — resolved by convention with
+ * getIdentifier, since a library cannot reference the app's R class.
  */
 public class NnbBridgeActivity extends BridgeActivity {
     static final String PREFS = "app_prefs";
@@ -29,7 +29,9 @@ public class NnbBridgeActivity extends BridgeActivity {
         SharedPreferences prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         boolean dark = prefs.getBoolean(KEY_DARK, false);
         int theme = getResources().getIdentifier(
-            dark ? "AppTheme_NoActionBarLaunchDark" : "AppTheme_NoActionBarLaunch",
+            // Dotted names — the cap-template convention sync generates (T9: an
+            // underscore spelling returned 0 and setTheme was silently skipped).
+            dark ? "AppTheme.NoActionBarLaunchDark" : "AppTheme.NoActionBarLaunch",
             "style",
             getPackageName()
         );
@@ -37,11 +39,14 @@ public class NnbBridgeActivity extends BridgeActivity {
             setTheme(theme);
         }
 
-        super.onCreate(savedInstanceState);
-
         // Insets provider for useNativeSafeArea (audit 20) — registered by the
-        // bridge itself, app code never wires it.
+        // bridge itself, app code never wires it. MUST precede super.onCreate:
+        // Capacitor's registerPlugin only QUEUES on the Bridge.Builder, and the
+        // bridge is BUILT inside super.onCreate — a later registerPlugin
+        // silently no-ops (T9 device finding: "plugin not implemented").
         registerPlugin(NnbInsetsPlugin.class);
+
+        super.onCreate(savedInstanceState);
 
         // Edge-to-edge (one native path; CSS handles the rest) and the
         // contrast values the starter tuned (both flags off).

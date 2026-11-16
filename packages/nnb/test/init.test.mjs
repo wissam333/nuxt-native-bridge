@@ -46,6 +46,7 @@ test('renderCapacitorConfig pins webDir, autoHide off and the brand background',
   assert.match(out, /appName: 'Hello'/)
   assert.match(out, /webDir: '\.output\/public'/)
   assert.match(out, /launchAutoHide: false/)
+  assert.match(out, /launchFadeOutDuration: 300/)
   assert.match(out, /backgroundColor: '#0D8A8F'/)
 })
 

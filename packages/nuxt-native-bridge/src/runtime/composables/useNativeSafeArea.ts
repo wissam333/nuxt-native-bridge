@@ -17,6 +17,15 @@ export function applySafeAreaVars(insets: SafeAreaInsets, doc: Document = docume
 }
 
 /**
+ * Native px → CSS px: Android WindowInsets values are raw device pixels; CSS
+ * needs density-relative px (T9 device finding: 110 native px on a 450dpi
+ * device is 39 CSS px — writing raw px made headers 3× too tall or too small).
+ */
+export function nativeToCssInsets(insets: SafeAreaInsets, dpr: number): SafeAreaInsets {
+  return { top: Math.round(insets.top / dpr), bottom: Math.round(insets.bottom / dpr) }
+}
+
+/**
  * Real native insets via the NnbInsets bridge plugin (android only).
  * web/electron: isSupported false, zeroed insets — CSS fallback stands.
  */
@@ -30,7 +39,7 @@ export function useNativeSafeArea() {
       const { registerPlugin } = await import('@capacitor/core')
       const NnbInsets = registerPlugin<{ getInsets(): Promise<SafeAreaInsets> }>('NnbInsets')
       const res = await NnbInsets.getInsets()
-      insets.value = { top: res.top ?? 0, bottom: res.bottom ?? 0 }
+      insets.value = nativeToCssInsets({ top: res.top ?? 0, bottom: res.bottom ?? 0 }, window.devicePixelRatio || 1)
       applySafeAreaVars(insets.value)
     })().catch(err => console.warn('[nnb] insets unavailable, CSS fallback stands:', err))
   }

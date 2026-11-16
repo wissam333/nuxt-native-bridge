@@ -1,4 +1,4 @@
-package arselhawallet.com;
+package com.nnb.playground;
 
 import android.content.Context;
 import android.content.SharedPreferences;
