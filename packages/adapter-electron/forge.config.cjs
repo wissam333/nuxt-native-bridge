@@ -8,12 +8,15 @@ const path = require('node:path')
 
 // pnpm's symlinked node_modules does not survive electron-packager's copy
 // (packages arrive as empty dirs — found by the T6 packaged-app smoke gate).
-// Pack prod dependencies as real files after the normal copy, resolving each
-// the way the app's Node does (hoisted layouts included).
+// Pack the RUNTIME deps as real files after the normal copy, resolving each
+// the way the app's Node does (hoisted layouts included). Explicit list: the
+// adapter's other dependencies are the BUILD toolchain (forge/makers) and the
+// electron binary itself — forge excludes electron from the packaged app, and
+// bin-only packages like @electron-forge/cli have no main to resolve.
+const RUNTIME_DEPS = ['electron-squirrel-startup']
 function copyProdDeps(buildPath, _electronVersion, _platform, _arch, callback) {
   try {
-    const deps = Object.keys(require('./package.json').dependencies || {})
-    for (const name of deps) {
+    for (const name of RUNTIME_DEPS) {
       const entry = require.resolve(name, { paths: [__dirname] })
       cpSync(path.dirname(entry), path.join(buildPath, 'node_modules', name), { recursive: true, dereference: true })
     }

@@ -18,7 +18,7 @@ const appDir = () => process.cwd()
 // ---------------------------------------------------------------------------
 export async function devElectron(opts = {}) {
   const port = opts.port || 3000
-  const adapterDir = findAdapterDir()
+  const adapterDir = findAdapterDir(appDir())
   const electronExe = resolveElectronPath(adapterDir)
   if (!electronExe) fail('cannot resolve the electron binary — install workspace deps first')
 
@@ -109,7 +109,7 @@ export async function devWeb(opts = {}) {
 // ---------------------------------------------------------------------------
 export async function buildElectron(opts = {}) {
   const cfg = await readAppConfig(appDir())
-  const adapterDir = findAdapterDir()
+  const adapterDir = findAdapterDir(appDir())
 
   // 1. Static SPA generation for the desktop target (module forces ssr:false).
   process.env.NUXT_TARGET = 'electron'
@@ -132,6 +132,13 @@ export async function buildElectron(opts = {}) {
 
   // 4. package (runnable app, fast) by default, make (installer) with --installer.
   // The CLI owns the electron mirror env (Forge re-fetches SHASUMS at packaging).
+  // Forge's pnpm system check runs `pnpm config get node-linker` with the
+  // adapter as its project root — inside node_modules, where pnpm config
+  // discovery stops at the nearest package.json and the app's own settings are
+  // unreachable. pnpm 12 reads these settings only from pnpm-workspace.yaml,
+  // so write one next to the adapter's package.json (npm tarballs cannot ship
+  // it; the app-level .npmrc covers pnpm versions that still read .npmrc).
+  fs.writeFileSync(path.join(adapterDir, 'pnpm-workspace.yaml'), 'nodeLinker: hoisted\n')
   await run('npx', ['electron-forge', opts.installer ? 'make' : 'package'], { cwd: adapterDir, env: { ...env, ...electronEnv() } })
 
   // 5. Point at the artifacts.

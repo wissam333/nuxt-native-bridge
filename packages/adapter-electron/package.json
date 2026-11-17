@@ -1,11 +1,21 @@
 {
-  "name": "adapter-electron",
-  "version": "0.0.0",
-  "private": true,
-  "description": "NNB adapter-electron: hardened Electron shell for Nuxt SPAs (spec §6.2).",
+  "name": "@nnb/adapter-electron",
+  "version": "0.1.0",
+  "description": "NNB hardened Electron shell for Nuxt SPAs (app:// protocol, sandbox, window-state, fuses).",
   "license": "MIT",
   "author": "Wissam Najjom",
   "main": "main.cjs",
+  "config": {
+    "forge": "forge.config.cjs"
+  },
+  "files": [
+    "main.cjs",
+    "preload.cjs",
+    "ui-router.cjs",
+    "window-state.cjs",
+    "forge.config.cjs",
+    "scripts"
+  ],
   "scripts": {
     "start": "electron .",
     "smoke": "node scripts/smoke.cjs",
@@ -15,9 +25,6 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
-  },
-  "devDependencies": {
     "@electron-forge/cli": "^7.10.2",
     "@electron-forge/maker-deb": "^7.10.2",
     "@electron-forge/maker-rpm": "^7.10.2",
@@ -26,8 +33,12 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.10.2",
     "@electron-forge/plugin-fuses": "^7.10.2",
     "@electron/fuses": "^1.8.0",
-    "@nuxt/eslint-config": "^1.17.0",
     "electron": "39.2.4",
+    "electron-squirrel-startup": "^1.0.1"
+  },
+  "devDependencies": {
+    "electron": "39.2.4",
+    "@nuxt/eslint-config": "^1.17.0",
     "eslint": "^10.12.0"
   }
 }

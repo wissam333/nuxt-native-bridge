@@ -15,9 +15,11 @@ const CLI_DIR = path.dirname(fileURLToPath(import.meta.url))
 const BEGIN = '// nnb:bridge-library — generated wiring, rewritten by nnb init'
 const END = '// /nnb:bridge-library'
 
-// adapter-capacitor sits next to adapter-electron in the monorepo (T1).
-function adapterCapacitorAndroidDir() {
-  return path.resolve(CLI_DIR, '..', 'adapter-capacitor', 'android')
+// Vendored bridge-library source (copy of packages/adapter-capacitor/android).
+// Scaffolded apps get an in-app copy so Gradle never reaches across installs;
+// a node:test drift-guard keeps this copy in sync with the adapter original.
+function bridgeAndroidDir() {
+  return path.resolve(CLI_DIR, 'bridge-android')
 }
 
 // ---------------------------------------------------------------------------
@@ -140,7 +142,7 @@ export function renderElectronMain(appName) {
 // adapter shell. \`npx electron electron/\` runs the built UI from .output/public.
 process.env.NNB_APP_NAME ||= ${JSON.stringify(appName)}
 process.env.NNB_UI_DIR ||= require('node:path').join(__dirname, '..', '.output', 'public')
-require('adapter-electron/main.cjs')
+require('@nnb/adapter-electron/main.cjs')
 `
 }
 
@@ -164,7 +166,7 @@ function renderPackageJsonPatch(pkgText) {
   pkg.dependencies ||= {}
   pkg.devDependencies ||= {}
   for (const [name, version] of Object.entries({
-    'nuxt-native-bridge': 'link:../../packages/nuxt-native-bridge',
+    'nuxt-native-bridge': '^0.1.0',
     '@capacitor/core': '^8.0.0',
     // cap add android requires the android platform package too (plan T7's
     // list omits it — added here).
@@ -176,7 +178,11 @@ function renderPackageJsonPatch(pkgText) {
     if (!pkg.dependencies[name] && !pkg.devDependencies[name]) pkg.dependencies[name] = version
   }
   if (!pkg.devDependencies['@capacitor/cli']) pkg.devDependencies['@capacitor/cli'] = '^8.0.0'
-  if (!pkg.devDependencies['adapter-electron']) pkg.devDependencies['adapter-electron'] = 'link:../../packages/adapter-electron'
+  // nnb toolchain from npm: the CLI bin (nnb dev/build) + the hardened Electron
+  // adapter (its electron/forge deps install with it, so `nnb build electron`
+  // works from the app without the monorepo).
+  if (!pkg.devDependencies['@nnb/cli']) pkg.devDependencies['@nnb/cli'] = '^0.1.0'
+  if (!pkg.devDependencies['@nnb/adapter-electron']) pkg.devDependencies['@nnb/adapter-electron'] = '^0.1.0'
   // 2-space JSON, trailing newline — matches npm's own formatting.
   return `${JSON.stringify(pkg, null, 2)}\n`
 }
@@ -226,12 +232,28 @@ export async function init() {
     || fs.existsSync(path.join(CLI_DIR, '..', '..', 'pnpm-lock.yaml'))
   if (hasPnpm && !fs.existsSync(path.join(appDir, 'pnpm-workspace.yaml'))) {
     // pnpm 12 fails the whole install when a native build script is unapproved
-    // (esbuild via vite is hit by every Nuxt app); standalone apps need their
-    // own approvals file.
-    fs.writeFileSync(path.join(appDir, 'pnpm-workspace.yaml'), `# nnb init: pnpm requires explicit build approvals for native postinstall scripts.
+    // (esbuild via vite is hit by every Nuxt app; electron's binary download is
+    // hit by the adapter), electron-packager cannot walk pnpm symlinks (T6), and
+    // Forge's native-rebuild chain resolves via a git URL — mirror the monorepo
+    // settings so standalone apps behave the same.
+    fs.writeFileSync(path.join(appDir, 'pnpm-workspace.yaml'), `# nnb init: pnpm 12 build approvals + packaging layout for the electron adapter.
 allowBuilds:
   esbuild: true
   "@parcel/watcher": true
+  electron: true
+  electron-winstaller: true
+blockExoticSubdeps: false
+nodeLinker: hoisted
+`)
+  }
+  if (!fs.existsSync(path.join(appDir, '.npmrc'))) {
+    // Persistent electron mirror + node-linker for Forge: forge's own pnpm
+    // check reads .npmrc (not pnpm-workspace.yaml) and refuses symlinked
+    // layouts — mirror the monorepo's committed .npmrc pair.
+    fs.writeFileSync(path.join(appDir, '.npmrc'), `# nnb init: electron artifacts via mirror (GitHub CDN times out on restricted networks)
+electron_mirror=https://npmmirror.com/mirrors/electron/
+# electron-forge requires a hoisted (npm-like) layout when pnpm is used
+node-linker=hoisted
 `)
   }
   await run(hasPnpm ? 'pnpm' : 'npm', hasPnpm ? ['install'] : ['install', '--no-audit', '--no-fund'], { cwd: appDir, env: { ...process.env, ...electronEnv() } })
@@ -248,7 +270,10 @@ allowBuilds:
     await run('npx', ['cap', 'add', 'android'], { cwd: appDir })
     const mainPath = path.join(androidDir, 'app', 'src', 'main', 'java', ...appId.split('.'), 'MainActivity.java')
     fs.writeFileSync(mainPath, renderMainActivity(appId))
-    const rel = path.relative(androidDir, adapterCapacitorAndroidDir()).replace(/\\/g, '/')
+    // Scaffold the bridge library INTO the app (self-contained Gradle — no
+    // cross-install paths for npm consumers), then include the local copy.
+    fs.cpSync(bridgeAndroidDir(), path.join(androidDir, 'nnb-bridge'), { recursive: true })
+    const rel = 'nnb-bridge'
     const settingsFile = path.join(androidDir, 'settings.gradle')
     fs.writeFileSync(settingsFile, renderBridgeInclude(fs.readFileSync(settingsFile, 'utf8'), rel))
     const gradleFile = path.join(androidDir, 'app', 'build.gradle')

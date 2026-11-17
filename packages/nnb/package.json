@@ -1,13 +1,24 @@
 {
-  "name": "nnb",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@nnb/cli",
+  "version": "0.1.0",
   "type": "module",
-  "description": "nnb — nuxt-native-bridge CLI: dev/build/doctor for web, Electron and Android targets.",
+  "description": "nnb CLI: dev/build/doctor for web, Electron and Android targets of nuxt-native-bridge.",
   "license": "MIT",
   "bin": {
     "nnb": "cli.mjs"
   },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "cli.mjs",
+    "commands.mjs",
+    "lib.mjs",
+    "init.mjs",
+    "native-sync.mjs",
+    "icons.mjs",
+    "bridge-android"
+  ],
   "scripts": {
     "lint": "eslint .",
     "test": "node --test"

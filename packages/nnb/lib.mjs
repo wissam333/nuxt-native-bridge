@@ -88,7 +88,10 @@ export async function readAppConfig(appDir) {
   if (!globalThis.defineNuxtConfig) globalThis.defineNuxtConfig = cfg => cfg
   const file = path.join(appDir, 'nuxt.config.ts')
   if (!fs.existsSync(file)) fail(`no nuxt.config.ts in ${appDir}`)
-  const jiti = createJiti(import.meta.url)
+  // fsCache off: jiti's on-disk cache can serve a pre-patch module when init
+  // rewrites nuxt.config.ts and re-reads within the same mtime tick (found by
+  // the published-flow scratch gate — splash config read as undefined).
+  const jiti = createJiti(import.meta.url, { fsCache: false, moduleCache: false })
   const mod = await jiti(file)
   const cfg = mod.default ?? {}
   return {
@@ -98,10 +101,21 @@ export async function readAppConfig(appDir) {
   }
 }
 
-export function findAdapterDir() {
+export function findAdapterDir(appDir) {
   const fromEnv = process.env.NNB_ELECTRON_ADAPTER
   if (fromEnv) return path.resolve(fromEnv)
-  // Workspace sibling of the CLI package (works on any platform/drive).
+  // Published flow: the app devDeps @nnb/adapter-electron (installed by
+  // `nnb init`), so the adapter resolves from the app's node_modules.
+  if (appDir) {
+    for (const name of ['@nnb/adapter-electron', 'adapter-electron']) {
+      try {
+        const req = createRequire(pathToFileURL(path.join(appDir, 'package.json')))
+        return path.dirname(req.resolve(`${name}/package.json`))
+      }
+      catch { /* not installed here — try the next source */ }
+    }
+  }
+  // Monorepo flow: workspace sibling of the CLI package (playground dev).
   return path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'adapter-electron')
 }
 

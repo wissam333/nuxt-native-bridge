@@ -1,0 +1,24 @@
+// NNB Android bridge library — included by app settings.gradle as ':nnb-bridge'.
+// SDK levels come from the app's variables.gradle (rootProject.ext), the same
+// way Capacitor's own library modules resolve them.
+apply plugin: 'com.android.library'
+
+android {
+    namespace 'com.nnb.bridge'
+    compileSdk rootProject.ext.compileSdkVersion
+    defaultConfig {
+        minSdk rootProject.ext.minSdkVersion
+        targetSdk rootProject.ext.targetSdkVersion
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}
+
+dependencies {
+    implementation project(':capacitor-android')
+    implementation "androidx.appcompat:appcompat:$rootProject.ext.androidxAppCompatVersion"
+    implementation "androidx.core:core:$rootProject.ext.androidxCoreVersion"
+}

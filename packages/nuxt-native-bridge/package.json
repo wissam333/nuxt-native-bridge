@@ -1,8 +1,11 @@
 {
   "name": "nuxt-native-bridge",
-  "version": "1.0.0",
-  "description": "My new Nuxt module",
-  "repository": "your-org/my-module",
+  "version": "0.1.0",
+  "description": "One Nuxt codebase shipped as a website, a desktop app (Electron) and an Android app (Capacitor).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wissam333/nuxt-native-bridge.git"
+  },
   "license": "MIT",
   "type": "module",
   "exports": {

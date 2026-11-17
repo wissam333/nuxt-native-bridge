@@ -43,6 +43,9 @@ out/
 .nitro
 .data
 
+# npm pack artifacts (built fresh before every publish)
+*.tgz
+
 # Secrets & signing material — NEVER publish (public repo)
 keystore.properties
 keystore.properties.*
