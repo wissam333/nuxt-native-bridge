@@ -214,7 +214,7 @@ export async function doctor() {
   const nodeVer = process.versions.node.split('.').map(Number)
   row(semver(nodeVer, [20, 19]), 'node', `v${process.versions.node} (needs ≥20.19)`)
 
-  const adapterDir = findAdapterDir()
+  const adapterDir = findAdapterDir(appDir())
   const electronExe = resolveElectronPath(adapterDir)
   row(Boolean(electronExe), 'electron adapter', electronExe ? adapterDir : 'binary missing — run pnpm install in the workspace')
 
