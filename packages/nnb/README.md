@@ -35,4 +35,8 @@ Full tutorial, per-target guides and specs: [github.com/wissam333/nuxt-native-br
 - Every command runs from your app directory; the CLI resolves the Nuxt module and
   the Electron adapter from your app's `node_modules`.
 
+## Troubleshooting
+
+- Windows says "An Application Control policy has blocked this file" when the desktop window should open: Smart App Control is on and refuses the unsigned `electron.exe`. Turn Smart App Control off (Windows Security > App & browser control > Smart App Control; this is one-way, re-enabling needs a Windows reset) or run the desktop build on another machine. Web and Android targets are unaffected.
+
 MIT license.

@@ -41,6 +41,10 @@ export async function devElectron(opts = {}) {
     env: { ...process.env, NNB_DEV_URL: devUrl },
     stdio: 'inherit',
   })
+  shell.on('error', (err) => {
+    killTree(server)
+    fail(`cannot launch Electron (${err.code ?? err.message}) — if Windows Smart App Control is on, it blocks unsigned electron.exe; turn Smart App Control off or run the desktop build on another machine`)
+  })
   // Either side exiting ends the pair; the shell's code is the CLI's result.
   shell.on('exit', (code) => {
     killTree(server)
