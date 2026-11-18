@@ -1,197 +1,200 @@
 <p align="center">
-  <img src="docs/assets/banner.jpg" alt="nuxt-native-bridge: one Nuxt codebase → website, desktop, Android" width="100%" />
+  <img src="docs/assets/banner.jpg" alt="nuxt-native-bridge banner" width="100%" />
 </p>
 
-<h1 align="center">nuxt-native-bridge <em>(nnb)</em></h1>
+<h1 align="center">nuxt-native-bridge (nnb)</h1>
 
 <p align="center">
-  <strong>One Nuxt codebase. Three native destinations.</strong><br/>
-  Write your app once: nnb ships it as a <strong>website</strong>, a <strong>desktop app</strong> (Electron),
-  and an <strong>Android app</strong> (Capacitor) with real native behavior: splash, safe areas,
-  back button, status bar, theming.
+  Build one Nuxt app and ship it as a website, a desktop app for Electron and an Android app.
 </p>
 
 ---
 
-## Why
+nnb adds the native shells to a Nuxt project you already have. Your pages, components and
+styles stay normal Nuxt. `nnb init` wires the targets, then one CLI builds each one.
 
-Frameworks made "write once" easy for the *web*. But the moment your product needs a desktop
-or mobile build, you're usually dragged into maintaining three divergent codebases, or shipping
-a webview-in-a-box that feels nothing like a native app.
-
-**nnb** is the bridge (literally, see the icon): one Nuxt 4 codebase, one config block, and a
-small CLI that wires each native shell for you. The Nuxt module flips per-target behavior
-(`NUXT_TARGET=web|electron|android`), the adapters own the native plumbing, and your app code
-stays ordinary Nuxt.
-
-```ts
-// nuxt.config.ts: the only contract you learn
-nativeBridge: {
-  app: { id: 'com.example.app', name: 'My App' },
-  brand: { color: '#0D8A8F' },
-  icons: { source: 'public/icon.jpg' },
-  android: { splash: { hideOn: 'mounted', fade: 300 } },
-  backButton: { exitRoutes: ['/'] },
-}
-```
-
-## Tutorial: one app → web, desktop, Android
-
-> nnb ships as three npm packages: the `nuxt-native-bridge` module, the `@nnb/cli`
-> tool and the `@nnb/adapter-electron` shell. One command scaffolds your app for all
-> three targets. Node 20+ and pnpm recommended.
-
-### 0 · Prerequisites
+## Requirements
 
 | Target | Needs |
 | --- | --- |
-| Web | Node 20+, pnpm |
-| Desktop (Electron) | nothing extra (mirror pins included) |
-| Android | JDK 21 + Android SDK + `adb` (no Android Studio needed) |
+| Web | Node 20.19+ |
+| Desktop (Electron) | nothing extra |
+| Android | JDK 21 and the Android SDK |
 
-`nnb doctor` (run at the end of init) reports exactly what's missing.
+`nnb doctor` reports which of these it can find.
 
-### 1 · Create your app
+## 1. Add nnb to your app
+
+Run this inside your Nuxt 3.16+ or 4 project:
 
 ```bash
-pnpm create nuxt my-app     # pick pnpm when asked
-cd my-app
-pnpm dlx @nnb/cli init
+npx @nnb/cli init
 ```
 
-`init` prompts for your **package id** (`com.you.myapp`), **app name**, and **logo path**.
-Press Enter on the logo and it writes `nativeBridge.icons` commented out, ready
-to point at your file. A real path writes the block live and generates the icons.
-It adds the npm packages (`nuxt-native-bridge`, Capacitor, the `@nnb` toolchain), then wires all
-three targets: the `nativeBridge` config block, the Capacitor Android shell, the
-hardened Electron main, the native theme/splash files, and a `nnb doctor` check at
-the end. Afterwards the app has its own copy of the CLI: run everything below with
-`pnpm exec nnb ...`.
+It asks for three things:
 
-### 2 · The only contract: `nativeBridge` in `nuxt.config.ts`
+- application id, in reverse-DNS form (`com.you.myapp`), permanent for Android
+- application name
+- logo path relative to the app. Press Enter to insert a commented example you can fill in later
+
+Then it:
+
+- adds `nuxt-native-bridge`, Capacitor, `@nnb/cli` and the Electron adapter to `package.json`
+- adds the `nativeBridge` block to `nuxt.config.ts`
+- creates `capacitor.config.ts`, the `android/` project and `electron/main.cjs`
+- generates splash and native theme files, plus app icons when you provide a logo
+- runs `nnb doctor`
+
+You can re-run `init` at any time. It keeps your edits and only fills in what is missing.
+
+Use a square logo of at least 1024x1024 for the best launcher icon results.
+
+## 2. Configure
+
+Everything nnb reads lives in one block in `nuxt.config.ts`:
 
 ```ts
 nativeBridge: {
   app: { id: 'com.you.myapp', name: 'My App' },
   brand: { color: '#0D8A8F' },
-  apiBase: 'https://api.example.com',   // carried to native targets only
+  apiBase: 'https://api.example.com', // exposed on native targets only
   icons: {
-    source: 'public/icon.jpg',          // web/desktop icons + favicons
-    android: { glyph: 'public/glyph.png', background: ['#16211F', '#0A1311'] },
-    splash: 'public/glyph.png',         // splash logo
+    source: 'public/logo.png', // web and desktop icons + favicons
+    android: { glyph: 'public/logo.png', background: '#0D8A8F' },
+    splash: 'public/logo.png',
   },
   android: { splash: { hideOn: 'mounted', fade: 300 } },
-  backButton: { exitRoutes: ['/'] },    // routes where system back shows an exit modal
+  backButton: { exitRoutes: ['/'] }, // back here asks to exit instead of navigating
 }
 ```
 
-Changed branding? `pnpm exec nnb icons` regenerates everything from this block.
+After changing the logo or brand color, run `npx nnb icons` once. It regenerates the web
+icons, Android launcher icons and splash artwork from this block. If you skipped the logo
+prompt during `init`, run `npx nnb icons` and give it the path when asked; it fills in the
+commented block.
 
-### 3 · Website
+## 3. Know the native limits
 
-Your normal dev server. nnb does not change web:
+Native targets are static single-page apps. Nitro server routes such as `server/api/*` are
+not available in the desktop or Android build.
 
-```bash
-pnpm dev             # same as ever; http://localhost:3000
+Call a real API origin instead, for example `https://api.example.com`. `apiBase` is exposed
+on native targets, so you can keep using relative URLs on the web and switch on native:
+
+```ts
+const base = useNativeApiBase()
+const url = base ? `${base}/items` : '/api/items'
 ```
 
-(`pnpm exec nnb dev web` is an optional wrapper with a smoke check.)
+If your app uses `@nuxt/image`, keep `nuxt-native-bridge` before it in the `modules` array
+(`nnb init` does this for you). The module disables the ipx provider on native builds,
+because `/_ipx/...` URLs need a running server.
 
-### 4 · Desktop
+## 4. Website
 
-```bash
-pnpm exec nnb dev electron          # dev shell with real HMR
-pnpm exec nnb build electron        # packaged app in the adapter's out/
-pnpm exec nnb build electron --installer   # + Squirrel installer
-```
-
-### 5 · Android
+The web target is unchanged. Use your normal dev command:
 
 ```bash
-pnpm exec nnb build android
+npm run dev
 ```
 
-One command: generates the android-target web assets, syncs the native shell, runs Gradle.
+`npx nnb dev web` exists as an optional wrapper, but it is the same Nuxt dev server.
 
-→ `android/app/build/outputs/apk/debug/app-debug.apk`, install with
-`adb install -r <apk>` (some vendors, e.g. MIUI/HyperOS, pop an on-phone
-confirmation dialog you must accept).
+## 5. Desktop
 
-Two device quirks worth knowing: the cold-start splash follows the **system** dark mode
-(Android 12+ resolves it before your code runs), and splash/launcher **icon caches only
-refresh on a versionCode bump** in `android/app/build.gradle`.
+```bash
+npx nnb dev electron                 # dev window with real HMR
+npx nnb build electron               # packaged app
+npx nnb build electron --installer   # packaged app + Squirrel installer
+```
 
-### 6 · Native powers in your app code
+`build electron` generates the static UI, syncs it into the hardened Electron shell and
+packages it. The CLI prints the artifact path (under the adapter's `out/` folder).
+
+## 6. Android
+
+```bash
+npx nnb build android
+```
+
+That one command generates the Android-target web assets, syncs the native project and runs
+Gradle. The APK lands here:
+
+```bash
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Install it on a connected device or emulator:
+
+```bash
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Some vendors (MIUI, HyperOS) show an on-phone confirmation dialog you must accept.
+
+Two device notes:
+
+- the cold-start splash follows the system dark mode, because Android 12+ resolves it
+  before your code runs
+- Android caches splash and launcher icons per `versionCode`; bump it in
+  `android/app/build.gradle` to see new artwork
+
+## Native APIs in app code
+
+Most apps need none of these. Use them when you want platform-specific behavior:
 
 | Composable | What it gives you |
 | --- | --- |
-| `useNativePlatform()` | `'web' \| 'electron' \| 'android'`, branch when needed |
-| `useSafeArea()` | real device insets as CSS vars + refs (camera cutouts, gesture bars) |
-| `useApiBase()` | your `apiBase` on native targets, `undefined` on web |
-| `useNativeApp()` | `exit()` and app-state events (back button, exit modal) |
+| `useNativePlatform()` | `target` (`web`, `electron`, `android`), `os`, `isNative`, `isAndroid`, `isElectron` |
+| `useNativeSafeArea()` | real device insets as `insets.top` / `insets.bottom` and CSS variables for camera cutouts and gesture bars |
+| `useNativeApiBase()` | your `apiBase` on native targets, `undefined` on web |
+| `useNativeApp()` | `onExitRequested()`, `onResume()`, `onPause()`, `exit()` |
+| `useBackButton()` | `pushHandler()` / `popHandler()` for screens that intercept Android back |
 
-Splash, theming, safe-area padding, and back-button handling come for free; most apps
-write zero platform code.
+Splash hiding, status bar theming, safe-area padding and default back-button handling are
+already wired. You only add code when you want to customize them.
 
-### Try the demo
-
-The playground (`packages/nuxt-native-bridge/playground`) is a working example of all of
-the above: dark-mode toggle, camera-cutout layout, keyboard demo, exit modal.
-
-### From the clone (contributors)
-
-```bash
-git clone https://github.com/wissam333/nuxt-native-bridge.git nnb
-cd nnb && pnpm install          # wires CLI + Nuxt module + both adapters
-```
-
-An app created inside the clone keeps working via relative-path wiring
-(`node ../../packages/nnb/cli.mjs init` from the app dir); the demo lives in
-`packages/nuxt-native-bridge/playground`.
-
-## The CLI
+## CLI
 
 | Command | What it does |
 | --- | --- |
-| `nnb init` | Scaffolds a Nuxt app for all three targets (config, deps, Capacitor shell, Electron main, native files) |
-| `nnb dev web \| electron` | Dev server; Electron opens inside the hardened shell with real HMR |
-| `nnb build electron [--installer]` | Packaged desktop app (+ Squirrel installer) with fuses hardened |
-| `nnb build android` | Generate → sync → Gradle → `app-debug.apk` (mirror pins for hostile networks included) |
-| `nnb sync` | Regenerates the native files nnb owns; idempotent, preserves everything you authored |
-| `nnb icons` | Web/desktop icons + Android mipmaps + splash logo from one config block |
-| `nnb doctor` | 7-check environment audit (Node, JDK, SDK, Gradle, mirrors,…) |
+| `nnb init` | Wires an existing Nuxt app for all three targets |
+| `nnb dev web` | Optional wrapper around the normal Nuxt dev server |
+| `nnb dev electron` | Dev server plus the Electron shell with HMR |
+| `nnb build electron [--installer]` | Packaged desktop app, optionally with a Squirrel installer |
+| `nnb build android` | Generates web assets, syncs Android, runs Gradle, reports the APK |
+| `nnb sync` | Regenerates the native files nnb owns: themes, splash, manifest and mirrors |
+| `nnb icons` | Regenerates web, desktop and Android icons plus splash artwork |
+| `nnb doctor` | Checks Node, config, module install, Electron adapter, JDK, SDK and the Android project |
 
-## Layout
+Run commands from your app directory. The CLI resolves the module and adapters from your
+app's `node_modules`.
 
+## Troubleshooting
+
+**Windows blocks the Electron window.** Smart App Control refuses the unsigned
+`electron.exe` ("An Application Control policy has blocked this file"). Turn Smart App
+Control off or build the desktop app on another machine. Web and Android are unaffected.
+Turning Smart App Control back on requires a Windows reset.
+
+**Android cannot reach the network.** The generated manifest always includes
+`android.permission.INTERNET`. If you add your own manifest entries, keep that permission.
+
+## More docs
+
+- [Compatibility](docs/compatibility.md): tested Nuxt, Capacitor, Electron, JDK and SDK versions
+- [Nuxt module guide](packages/nuxt-native-bridge/README.md): target switching, composables and module behavior
+- [CLI guide](packages/nnb/README.md): command details and troubleshooting
+- [Electron adapter](packages/adapter-electron/README.md): security model and environment variables
+
+## Contributing
+
+```bash
+git clone https://github.com/wissam333/nuxt-native-bridge.git nnb
+cd nnb
+pnpm install
 ```
-packages/
-  nuxt-native-bridge/   the Nuxt module (target switch, boot script, runtime:
-                        useNativeApp, useNativeSafeArea, useApiBase, base css)
-    playground/         the demo app + its android/ electron shells
-  adapter-electron/     hardened Electron shell: app:// protocol, sandbox, CSP,
-                        window-state, single-instance, fuses + smoke probe
-  adapter-capacitor/    shared Android bridge library: NnbBridgeActivity (splash
-                        ownership, NnbInsetsPlugin, launch themes)
-  nnb/                  the CLI (zero-dep except jiti + sharp)
-docs/                   plan, progress ledger, compatibility matrix
-```
 
-## Status
+The demo app lives in `packages/nuxt-native-bridge/playground`.
 
-- **Phase 1: complete and device-verified.** Init, sync, splash ownership, safe-area insets,
-  apiBase, dev/build/smoke pipelines, the `nnb` CLI, verified end-to-end on a Xiaomi
-  (Android 16, MIUI/HyperOS): real splash behavior, real insets from the device cutout,
-  theme-following dark mode. The device batch surfaced **seven real defects, all fixed and
-  re-verified** (full record: [`docs/nnb-plan.md`](docs/nnb-plan.md) §7).
-- Tests: module vitest 13/13 · CLI node:test 27/27 · lint clean.
-- **Next:** Phase 2 module work (keyboard, theme (`useNativeTheme`), viewport), then adapter
-  hardening and docs ([plan](docs/nnb-phase1-plan.md)).
-
-## Docs
-
-| Doc | What's inside |
-| --- | --- |
-| [`docs/nnb-plan.md`](docs/nnb-plan.md) | The working plan + full progress ledger (§7) |
-| [`docs/nnb-phase1-plan.md`](docs/nnb-phase1-plan.md) | Phase 1 task breakdown (T1–T9) with gates |
-| [`docs/compatibility.md`](docs/compatibility.md) | Tested versions: Nuxt 4.x, Capacitor 8.x, Electron/Forge, JDK 21, targetSdk 36 |
-| [`nuxt-native-bridge Full Specification and Roadmap.md`](./nuxt-native-bridge%20Full%20Specification%20and%20Roadmap.md) | The full product spec |
+MIT license.
