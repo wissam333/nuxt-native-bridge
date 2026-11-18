@@ -1,4 +1,4 @@
-import { defineNuxtModule, createResolver, addImportsDir, addPlugin } from '@nuxt/kit'
+import { defineNuxtModule, createResolver, addImportsDir, addPlugin, logger } from '@nuxt/kit'
 import type { Nuxt } from '@nuxt/schema'
 
 export interface ModuleOptions {
@@ -46,6 +46,17 @@ export default defineNuxtModule<ModuleOptions>({
       nuxt.options.ssr = false
       nuxt.options.nitro.preset = 'static'
       nuxt.options.nitro.compressPublicAssets = false
+      // Nuxt Image's ipx provider emits /_ipx/... URLs that only a running
+      // server can answer; native shells serve static files, so every image
+      // (local and API-served) would silently break. Render plain <img> URLs.
+      const opts = nuxt.options as Nuxt['options'] & {
+        image?: { provider?: string }
+        _installedModules?: Array<{ meta?: { name?: string } }>
+      }
+      ;(opts.image ||= {}).provider = 'none'
+      if (opts._installedModules?.some(m => m.meta?.name === '@nuxt/image')) {
+        logger.warn('nuxt-native-bridge must be listed before @nuxt/image in `modules`, otherwise the image provider cannot be disabled and images will be broken in native builds.')
+      }
     }
 
     // 2. Runtime access to module config + target for the composables/plugin.

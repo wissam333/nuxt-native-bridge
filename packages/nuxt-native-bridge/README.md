@@ -47,6 +47,9 @@ Changed branding? `pnpm exec nnb icons` regenerates everything from this block.
 - Target switch from `NUXT_TARGET`: web keeps your config untouched; electron and
   android build a static SPA (pre-compression off, since Android's asset merger
   rejects `.gz` siblings).
+- Nuxt Image is switched to `provider: 'none'` on native targets: its `/_ipx/...`
+  URLs need a running server, so optimized images would be broken in the app.
+  List `nuxt-native-bridge` before `@nuxt/image` in `modules` for this to apply.
 - Early-boot script: target/os attributes, native safe-area minimums and the
   pre-paint status-bar color land before any Vue code runs.
 - Splash hide/fade timing that follows the system dark mode on Android 12+.
