@@ -1,6 +1,6 @@
 {
   "name": "@nnb/adapter-electron",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "NNB hardened Electron shell for Nuxt SPAs (app:// protocol, sandbox, window-state, fuses).",
   "license": "MIT",
   "author": "Wissam Najjom",

@@ -2,5 +2,6 @@
   "name": "nuxt-native-bridge-monorepo",
   "private": true,
   "description": "NNB monorepo — one Nuxt codebase shipped as website + Electron + Android.",
-  "scripts": {}
+  "scripts": {},
+  "version": "0.1.6"
 }
