@@ -1,6 +1,6 @@
 {
   "name": "@nnb/cli",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "type": "module",
   "description": "nnb CLI: dev/build/doctor for web, Electron and Android targets of nuxt-native-bridge.",
   "license": "MIT",
