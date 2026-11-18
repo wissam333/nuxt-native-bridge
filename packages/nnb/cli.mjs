@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // nnb — nuxt-native-bridge CLI. argv dispatch only; logic lives in commands.mjs.
 // Usage: nnb <command> <target> [--flags]. See help for the current Phase 0 set.
 import { devElectron, devWeb, buildElectron, buildAndroid, sync, icons, doctor } from './commands.mjs'
