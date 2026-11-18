@@ -3,12 +3,15 @@
 // The orchestrator (prompts, cap add, installs) is verified by the one-time
 // e2e gate on a throwaway app.
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import {
   normalizeLogoPath, renderBridgeInclude, renderCapacitorConfig, renderIconsPatch, renderMainActivity,
-  renderNuxtConfigPatch, renderWrapperMirror, renderBuildToolsPin, resolveLogo,
+  renderMainActivityPatch, renderNuxtConfigPatch, renderWrapperMirror, renderBuildToolsPin, resolveLogo,
+  wireAndroid,
 } from '../init.mjs'
 
 const NUXT_CONFIG = `export default defineNuxtConfig({
@@ -69,6 +72,76 @@ test('renderMainActivity is thin and extends the bridge activity', () => {
   assert.match(out, /^package com\.example\.hello;/m)
   assert.match(out, /extends NnbBridgeActivity/)
   assert.doesNotMatch(out, /registerPlugin/)
+})
+
+test('renderMainActivityPatch swaps the stock base class and keeps app code', () => {
+  const stock = `package com.example.hello;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {}
+`
+  const out = renderMainActivityPatch(stock)
+  assert.match(out, /import com\.nnb\.bridge\.NnbBridgeActivity;/)
+  assert.match(out, /extends NnbBridgeActivity/)
+  assert.doesNotMatch(out, /com\.getcapacitor\.BridgeActivity/)
+  assert.equal(renderMainActivityPatch(out), out)
+
+  const appCode = `package com.example.hello;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+  @Override
+  public void onCreate(android.os.Bundle b) {
+    registerPlugin(ThemePrefsPlugin.class);
+    super.onCreate(b);
+  }
+}
+`
+  assert.match(renderMainActivityPatch(appCode), /registerPlugin\(ThemePrefsPlugin\.class\)/)
+  assert.equal(renderMainActivityPatch('public class MainActivity extends CustomActivity {}'), null)
+})
+
+test('wireAndroid repairs an existing stock shell and is idempotent', (t) => {
+  const appDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nnb-wire-'))
+  t.after(() => fs.rmSync(appDir, { recursive: true, force: true }))
+  const android = path.join(appDir, 'android')
+  const javaDir = path.join(android, 'app', 'src', 'main', 'java', 'com', 'example', 'hello')
+  fs.mkdirSync(javaDir, { recursive: true })
+  const main = path.join(javaDir, 'MainActivity.java')
+  fs.writeFileSync(main, `package com.example.hello;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {}
+`)
+  const settings = path.join(android, 'settings.gradle')
+  fs.writeFileSync(settings, 'include \':app\'\n')
+  const appGradle = path.join(android, 'app', 'build.gradle')
+  fs.writeFileSync(appGradle, 'dependencies {\n    implementation project(\':capacitor-android\')\n}\n')
+  const variables = path.join(android, 'variables.gradle')
+  fs.writeFileSync(variables, 'ext {\n    compileSdkVersion = 36\n}\n')
+  const wrapperDir = path.join(android, 'gradle', 'wrapper')
+  fs.mkdirSync(wrapperDir, { recursive: true })
+  const wrapper = path.join(wrapperDir, 'gradle-wrapper.properties')
+  fs.writeFileSync(wrapper, 'distributionUrl=https\\://services.gradle.org/distributions/gradle-8.14.3-all.zip\n')
+
+  assert.equal(wireAndroid(appDir, 'com.example.hello'), true)
+
+  assert.ok(fs.existsSync(path.join(android, 'nnb-bridge', 'build.gradle')))
+  assert.ok(fs.existsSync(path.join(android, 'app', 'src', 'main', 'assets')))
+  assert.match(fs.readFileSync(main, 'utf8'), /extends NnbBridgeActivity/)
+  assert.match(fs.readFileSync(settings, 'utf8'), /include ':nnb-bridge'/)
+  assert.match(fs.readFileSync(appGradle, 'utf8'), /implementation project\(':nnb-bridge'\)/)
+  assert.match(fs.readFileSync(variables, 'utf8'), /buildToolsVersion = '36\.0\.0'/)
+  assert.match(fs.readFileSync(wrapper, 'utf8'), /mirrors\.cloud\.tencent\.com/)
+
+  const files = [main, settings, appGradle, variables, wrapper]
+  const snapshot = files.map(f => fs.readFileSync(f, 'utf8'))
+  wireAndroid(appDir, 'com.example.hello')
+  assert.deepEqual(files.map(f => fs.readFileSync(f, 'utf8')), snapshot)
+  assert.equal((fs.readFileSync(settings, 'utf8').match(/:nnb-bridge/g) || []).length, 2)
 })
 
 const SETTINGS = `dependencyResolutionManagement {

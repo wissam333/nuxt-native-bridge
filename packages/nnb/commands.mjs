@@ -7,7 +7,7 @@ import {
   resolveElectronPath, run, syncDir, waitPort,
 } from './lib.mjs'
 import { buildIcons } from './icons.mjs'
-import { askLogoPath, hexColor, renderIconsPatch, resolveLogo } from './init.mjs'
+import { askLogoPath, hexColor, renderIconsPatch, resolveLogo, wireAndroid } from './init.mjs'
 import { nativeSync } from './native-sync.mjs'
 
 const appDir = () => process.cwd()
@@ -165,11 +165,32 @@ export async function buildElectron(opts = {}) {
 // nnb sync / nnb build android — cap sync, then Gradle run with doctor-figured
 // JAVA_HOME (no hardcoded paths; spec §6.6).
 // ---------------------------------------------------------------------------
+async function ensureWebAssets(dir) {
+  const index = path.join(dir, '.output', 'public', 'index.html')
+  if (fs.existsSync(index)) return
+  log('no .output/public/index.html, generating the Android web assets first')
+  await run('npx', ['nuxt', 'generate'], {
+    cwd: dir,
+    env: { ...process.env, NUXT_TARGET: 'android' },
+  })
+  if (!fs.existsSync(index)) {
+    fail('nuxt generate finished without .output/public/index.html, check the Nuxt build output')
+  }
+}
+
 export async function sync() {
-  await run('npx', ['cap', 'sync', 'android'], { cwd: appDir() })
+  const dir = appDir()
+  if (!fs.existsSync(path.join(dir, 'android'))) fail(`no android/ project in ${dir}, run \`nnb init\` first`)
+  const cfg = await readAppConfig(dir)
+  // Cap sync only copies an existing build; a stale or missing .output/public
+  // is the usual "must contain an index.html" failure. Generate first.
+  await ensureWebAssets(dir)
+  // Repair shells created before nnb (or by plain Capacitor): assets/,
+  // :nnb-bridge, MainActivity, SDK path and build-tools pin.
+  wireAndroid(dir, cfg.appId || 'com.example.app')
+  await run('npx', ['cap', 'sync', 'android'], { cwd: dir })
   // Config-derived native files (themes, manifest, mirrors) after cap sync.
-  const cfg = await readAppConfig(appDir())
-  nativeSync(appDir(), cfg.config.nativeBridge)
+  nativeSync(dir, cfg.config.nativeBridge)
 }
 
 // ---------------------------------------------------------------------------
@@ -213,6 +234,9 @@ export async function icons() {
 }
 
 export async function buildAndroid() {
+  const androidDir = path.join(appDir(), 'android')
+  if (!fs.existsSync(androidDir)) fail(`no android/ project in ${appDir()}`)
+
   // One command builds the native app: generate the web assets for the android
   // target first (Capacitor copies .output/public into the shell).
   await run('npx', ['nuxt', 'generate'], {
@@ -220,9 +244,6 @@ export async function buildAndroid() {
     env: { ...process.env, NUXT_TARGET: 'android' },
   })
   await sync()
-
-  const androidDir = path.join(appDir(), 'android')
-  if (!fs.existsSync(androidDir)) fail(`no android/ project in ${appDir()}`)
 
   const java = findJava()
   if (!java) fail('no JDK found — run `nnb doctor` for detected candidates')
