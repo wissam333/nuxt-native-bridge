@@ -111,10 +111,14 @@ export function renderManifestPatch(manifest, permissions = []) {
     .replace(/[ \t]*<uses-permission[^>]*\/>[ \t]*\n?/g, '')
     .replace(/(<manifest[^>]*>\n)\n+/, '$1')
 
-  const perms = permissions
+  // INTERNET is mandatory: without it the WebView cannot reach any API. It is
+  // always emitted (deduped) because the audit-14 strip below would otherwise
+  // remove Capacitor's template permission and silently break every network call.
+  const all = ['INTERNET', ...permissions.filter(p => p !== 'INTERNET')]
+  const perms = all
     .map(p => `    <uses-permission android:name="android.permission.${p}" />`)
     .join('\n')
-  const block = `    <!-- nnb:permissions — generated from nativeBridge.android.permissions, rewritten by nnb sync -->\n${perms}\n    <!-- /nnb:permissions -->\n`
+  const block = `    <!-- nnb:permissions — generated from nativeBridge.android.permissions (INTERNET always included), rewritten by nnb sync -->\n${perms}\n    <!-- /nnb:permissions -->\n`
 
   // re-insert after the <manifest ...> tag
   out = out.replace(/(<manifest[^>]*>\n)/, `$1${block}`)

@@ -47,6 +47,14 @@ test('renderManifestPatch writes permissions between markers and removes stale o
   assert.doesNotMatch(out, /\n{3}/)
 })
 
+test('renderManifestPatch always keeps INTERNET, even with no configured permissions', () => {
+  const out = renderManifestPatch(MANIFEST, [])
+  assert.match(out, /android\.permission\.INTERNET/)
+  // no duplicate when the app lists it itself
+  const dup = renderManifestPatch(MANIFEST, ['INTERNET', 'CAMERA'])
+  assert.equal((dup.match(/android\.permission\.INTERNET/g) || []).length, 1)
+})
+
 test('renderManifestPatch sets allowBackup=false and scaffolds dataExtractionRules', () => {
   const out = renderManifestPatch(MANIFEST, CFG.android.permissions)
   assert.match(out, /android:allowBackup="false"/)
