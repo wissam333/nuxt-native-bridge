@@ -1,6 +1,6 @@
 {
   "name": "nuxt-native-bridge",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "One Nuxt codebase shipped as a website, a desktop app (Electron) and an Android app (Capacitor).",
   "repository": {
     "type": "git",
