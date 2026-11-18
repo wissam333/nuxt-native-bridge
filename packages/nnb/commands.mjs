@@ -222,7 +222,7 @@ export async function doctor() {
 
   const adapterDir = findAdapterDir(appDir())
   const electronExe = resolveElectronPath(adapterDir)
-  row(Boolean(electronExe), 'electron adapter', electronExe ? adapterDir : 'binary missing — run pnpm install in the workspace')
+  row(Boolean(electronExe), 'electron adapter', electronExe ? adapterDir : 'binary missing — run npm install (or pnpm install) in the app')
 
   const cfg = await readAppConfig(appDir())
   row(Boolean(cfg.appId), 'nativeBridge config', cfg.appId

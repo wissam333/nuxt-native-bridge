@@ -6,6 +6,20 @@
     "type": "git",
     "url": "git+https://github.com/wissam333/nuxt-native-bridge.git"
   },
+  "homepage": "https://github.com/wissam333/nuxt-native-bridge#readme",
+  "bugs": {
+    "url": "https://github.com/wissam333/nuxt-native-bridge/issues"
+  },
+  "keywords": [
+    "nuxt",
+    "nuxt-module",
+    "electron",
+    "android",
+    "capacitor",
+    "desktop",
+    "mobile",
+    "spa"
+  ],
   "license": "MIT",
   "type": "module",
   "exports": {

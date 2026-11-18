@@ -16,7 +16,8 @@ const HELP = `nnb — nuxt-native-bridge CLI (Phase 0)
   nnb dev electron           Nuxt dev server (HMR) inside the Electron shell
   nnb build electron [--installer]   static UI build → www sync → Forge package
                              (--installer adds the Squirrel installer pass)
-  nnb build android          cap sync + gradlew assembleDebug → APK
+  nnb build android          generate static UI + cap sync + gradlew assembleDebug
+                             → APK
   nnb sync                   cap sync only
   nnb icons                  generate web/desktop icons + android mipmaps from
                              nuxt.config.ts nativeBridge.icons (spec §6.5)

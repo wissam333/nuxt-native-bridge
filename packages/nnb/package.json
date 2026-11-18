@@ -4,6 +4,22 @@
   "type": "module",
   "description": "nnb CLI: dev/build/doctor for web, Electron and Android targets of nuxt-native-bridge.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wissam333/nuxt-native-bridge.git"
+  },
+  "homepage": "https://github.com/wissam333/nuxt-native-bridge#readme",
+  "bugs": {
+    "url": "https://github.com/wissam333/nuxt-native-bridge/issues"
+  },
+  "keywords": [
+    "nuxt",
+    "cli",
+    "electron",
+    "android",
+    "capacitor",
+    "desktop"
+  ],
   "bin": {
     "nnb": "cli.mjs"
   },

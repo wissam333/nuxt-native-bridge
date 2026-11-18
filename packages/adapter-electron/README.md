@@ -1,39 +1,48 @@
-# adapter-electron
+# @nnb/adapter-electron
 
-NNB's Electron shell (spec §6.2): hardened `app://` SPA protocol, secure
-window, sandboxed CJS preload, single-instance, window-state, CSP header,
-Forge packaging (Squirrel/zip/deb + asar integrity fuses).
+The hardened Electron shell behind `nnb build electron` for
+[nuxt-native-bridge](https://www.npmjs.com/package/nuxt-native-bridge).
 
-## Run against a built UI (dev)
+You normally do not install this package by hand: `@nnb/cli` adds it to your app and
+drives it. This page is for anyone reading the shell's security model or wiring it
+manually.
 
-The shell never guesses — dev needs an explicit UI directory:
+## How it is used
 
-```pwsh
-# 1. build the app once (web/static target works for desktop too)
-pnpm --filter nuxt-native-bridge exec nuxt generate   # run inside packages/nuxt-native-bridge/playground
-
-# 2. point the shell at it and start
-pnpm -C packages/adapter-electron start
-# with:  $env:NNB_UI_DIR = "packages/nuxt-native-bridge/playground/.output/public"
+```bash
+pnpm exec nnb build electron            # packaged app in the adapter's out/ directory
+pnpm exec nnb build electron --installer  # + Squirrel installer
+pnpm exec nnb dev electron              # dev window with HMR against your Nuxt dev server
 ```
 
-Packaged builds serve `www/` from inside the app asar (Forge `files`).
+The CLI generates the app's static UI, syncs it into the shell, then runs Electron
+Forge with the hardened config in this package.
 
-## Verify
+## What is hardened
 
-| Command | What it proves |
-|---|---|
-| `pnpm -C packages/adapter-electron test` | `app://` path resolver: SPA fallback, decoding, containment (unit) |
-| `pnpm -C packages/adapter-electron smoke` | shell boots, protocol serves a page, probe exits 0 (fixture UI) |
+| Layer | Behavior |
+| --- | --- |
+| Protocol | `app://` serves the packaged UI only; no `file://`, no network origins |
+| Window | sandboxed renderer, `contextIsolation`, no node integration, navigation and new-window guards |
+| Preload | minimal `contextBridge` surface (CJS, sandbox-compatible) |
+| CSP | strict Content-Security-Policy header served on every `app://` response |
+| Process | single-instance lock, rejected remote content, window-state persistence |
+| Packaging | Electron Forge + asar integrity fuses (`onlyLoadAppFromAsar`, cookie encryption, etc.) |
+| Smoke probe | `NNB_SMOKE=1` boots the shell, asserts the page title and exits 0/1 |
 
-## Config (env)
+## Manual run (advanced)
 
-| Var | Meaning |
-|---|---|
+```pwsh
+$env:NNB_UI_DIR = "path\to\.output\public"   # built Nuxt static output
+npm start
+```
+
+| Env var | Meaning |
+| --- | --- |
 | `NNB_UI_DIR` | dev UI source (built Nuxt `.output/public`); required when unpackaged |
-| `NNB_APP_NAME` / `NNB_EXECUTABLE` / `NNB_ICON` | Forge identity; CLI fills these from `nativeBridge` |
+| `NNB_DEV_URL` | Nuxt dev-server URL; set by `nnb dev electron` for HMR |
+| `NNB_APP_NAME` / `NNB_EXECUTABLE` / `NNB_ICON` | Forge identity; the CLI fills these from `nativeBridge` |
 | `NNB_CSP` | override the default CSP served on `app://` |
-| `NNB_SMOKE` / `NNB_SMOKE_EXPECT` | boot probe (`document.title` must equal expect; default `nnb-smoke`) |
+| `NNB_SMOKE` / `NNB_SMOKE_EXPECT` | boot probe (document title must equal expect; default `nnb-smoke`) |
 
-The `nnb` CLI (next step) automates: generate → sync UI → launch with the
-right env vars; until then the manual flow above stands.
+MIT license.

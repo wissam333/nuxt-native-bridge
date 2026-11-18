@@ -1,9 +1,24 @@
 {
   "name": "@nnb/adapter-electron",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "NNB hardened Electron shell for Nuxt SPAs (app:// protocol, sandbox, window-state, fuses).",
   "license": "MIT",
   "author": "Wissam Najjom",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wissam333/nuxt-native-bridge.git"
+  },
+  "homepage": "https://github.com/wissam333/nuxt-native-bridge#readme",
+  "bugs": {
+    "url": "https://github.com/wissam333/nuxt-native-bridge/issues"
+  },
+  "keywords": [
+    "electron",
+    "nuxt",
+    "desktop",
+    "security",
+    "forge"
+  ],
   "main": "main.cjs",
   "config": {
     "forge": "forge.config.cjs"
