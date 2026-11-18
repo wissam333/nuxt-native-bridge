@@ -180,6 +180,12 @@ export async function icons() {
 }
 
 export async function buildAndroid() {
+  // One command builds the native app: generate the web assets for the android
+  // target first (Capacitor copies .output/public into the shell).
+  await run('npx', ['nuxt', 'generate'], {
+    cwd: appDir(),
+    env: { ...process.env, NUXT_TARGET: 'android' },
+  })
   await sync()
 
   const androidDir = path.join(appDir(), 'android')

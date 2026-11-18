@@ -87,9 +87,13 @@ Changed branding? `pnpm exec nnb icons` regenerates everything from this block.
 
 ### 3 · Website
 
+Your normal dev server. nnb does not change web:
+
 ```bash
-pnpm exec nnb dev web        # http://localhost:3000
+pnpm dev             # same as ever; http://localhost:3000
 ```
+
+(`pnpm exec nnb dev web` is an optional wrapper with a smoke check.)
 
 ### 4 · Desktop
 
@@ -101,16 +105,11 @@ pnpm exec nnb build electron --installer   # + Squirrel installer
 
 ### 5 · Android
 
-Generate the web assets for the android target, then sync + Gradle:
-
 ```bash
-# PowerShell:
-$env:NUXT_TARGET='android'; npx nuxt generate
-# bash:
-NUXT_TARGET=android npx nuxt generate
-
 pnpm exec nnb build android
 ```
+
+One command: generates the android-target web assets, syncs the native shell, runs Gradle.
 
 → `android/app/build/outputs/apk/debug/app-debug.apk`, install with
 `adb install -r <apk>` (some vendors, e.g. MIUI/HyperOS, pop an on-phone
