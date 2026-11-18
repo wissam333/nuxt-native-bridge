@@ -21,9 +21,11 @@ const HELP = `nnb — nuxt-native-bridge CLI (Phase 0)
                              → APK
   nnb sync                   cap sync only
   nnb icons                  generate web/desktop icons + android mipmaps from
-                             nuxt.config.ts nativeBridge.icons (spec §6.5)
+                             nuxt.config.ts nativeBridge.icons (spec §6.5).
+                             If icons.source is missing, asks for a logo path
+                             or inserts that block commented out.
   nnb init                   scaffold nativeBridge wiring for all three targets
-                             (run inside a Nuxt app; prompts for id/name)
+                             (run inside a Nuxt app; prompts for id/name/logo)
   nnb doctor                 environment & project checks
 
 Run inside the app directory (the Nuxt app using nuxt-native-bridge).

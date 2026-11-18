@@ -33,8 +33,10 @@ protocol.registerSchemesAsPrivileged([
 
 // Sent with every protocol response. 'unsafe-inline' covers Nuxt's early boot
 // script until the module stamps nonces; apps override via NNB_CSP.
+// Scripts stay on this origin. Images, CSS and fonts may come from http(s)
+// because apps render API media and CDN stylesheets. connect-src already did.
 const CSP = process.env.NNB_CSP
-  || 'default-src \'self\'; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data: blob:; font-src \'self\' data:; connect-src \'self\' https: http: ws: wss:'
+  || 'default-src \'self\'; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\' https: http:; img-src \'self\' data: blob: https: http:; font-src \'self\' data: https: http:; connect-src \'self\' https: http: ws: wss:'
 
 function resolveUiRoot() {
   if (process.env.NNB_UI_DIR) return path.resolve(process.env.NNB_UI_DIR)

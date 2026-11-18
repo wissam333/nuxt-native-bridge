@@ -3,10 +3,12 @@
 // The orchestrator (prompts, cap add, installs) is verified by the one-time
 // e2e gate on a throwaway app.
 import assert from 'node:assert/strict'
+import path from 'node:path'
 import { test } from 'node:test'
+import { fileURLToPath } from 'node:url'
 import {
-  renderBridgeInclude, renderCapacitorConfig, renderMainActivity, renderNuxtConfigPatch, renderWrapperMirror,
-  renderBuildToolsPin,
+  normalizeLogoPath, renderBridgeInclude, renderCapacitorConfig, renderIconsPatch, renderMainActivity,
+  renderNuxtConfigPatch, renderWrapperMirror, renderBuildToolsPin, resolveLogo,
 } from '../init.mjs'
 
 const NUXT_CONFIG = `export default defineNuxtConfig({
@@ -19,6 +21,8 @@ test('renderNuxtConfigPatch inserts the marker block and the modules entry', () 
   const out = renderNuxtConfigPatch(NUXT_CONFIG, { id: 'com.example.hello', name: 'Hello' })
   assert.match(out, /nnb:init[\s\S]*nativeBridge:[\s\S]*app: \{ id: 'com\.example\.hello', name: 'Hello' \}/)
   assert.match(out, /modules: \['nuxt-native-bridge'\]/)
+  assert.match(out, /\/\/ nnb:icons — point source, glyph and splash at your logo/)
+  assert.match(out, /\/\/ icons: \{\n {4}\/\/ {3}source: 'public\/logo\.png'/)
   // inserted inside defineNuxtConfig — the final closer is untouched
   assert.equal((out.match(/\}\)/g) || []).length, 1)
 })
@@ -88,6 +92,53 @@ test('renderBuildToolsPin pins the pair next to compileSdk, idempotent', () => {
   // pre-pinned files pass through untouched
   const pinned = `ext {\n    buildToolsVersion = '34.0.0'\n}\n`
   assert.equal(renderBuildToolsPin(pinned), pinned)
+})
+
+const WITH_BRIDGE = `export default defineNuxtConfig({
+  nativeBridge: {
+    app: { id: 'com.example.askmed', name: 'askmed' },
+    brand: { color: '#112233' },
+    android: {
+      icons: { foreground: 'assets/icons/app_icon.png' },
+    },
+  },
+})
+`
+
+test('normalizeLogoPath keeps a relative path and rejects escapes', () => {
+  assert.deepEqual(normalizeLogoPath('public\\logo.png'), { path: 'public/logo.png' })
+  assert.deepEqual(normalizeLogoPath('./public/logo.png'), { path: 'public/logo.png' })
+  assert.ok(normalizeLogoPath('../secret.png').error)
+  assert.ok(normalizeLogoPath('/etc/passwd').error)
+  assert.ok(normalizeLogoPath('public/logo.png\'').error)
+})
+
+test('resolveLogo accepts a real file and keeps a missing path commented', () => {
+  const appDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+  assert.equal(resolveLogo(appDir, 'package.json').logo, 'package.json')
+  const missing = resolveLogo(appDir, 'public/no-such-logo.png')
+  assert.equal(missing.logo, null)
+  assert.equal(missing.commentedPath, 'public/no-such-logo.png')
+})
+
+test('renderIconsPatch inserts a commented example and leaves a live block alone', () => {
+  const commented = renderIconsPatch(WITH_BRIDGE, { brand: '#112233' })
+  assert.match(commented, /\/\/ nnb:icons — point source/)
+  assert.match(commented, /\/\/ {3}source: 'public\/logo\.png'/)
+  assert.match(commented, /android: \{\n {6}icons: \{ foreground: 'assets\/icons\/app_icon\.png' \}/)
+  assert.equal(renderIconsPatch(commented, { brand: '#112233' }), commented)
+
+  const live = renderIconsPatch(commented, { logo: 'public/logo/logo-web.png', brand: '#112233' })
+  assert.match(live, /\n {4}icons: \{\n {6}source: 'public\/logo\/logo-web\.png',\n {6}android: \{ glyph: 'public\/logo\/logo-web\.png', background: '#112233' \},\n {6}splash: 'public\/logo\/logo-web\.png',\n {4}\},/)
+  assert.doesNotMatch(live, /\/\/ icons:/)
+  assert.equal(renderIconsPatch(live, { logo: 'public/other.png', brand: '#112233' }), live)
+})
+
+test('renderNuxtConfigPatch writes a live icons block when a logo is given', () => {
+  const out = renderNuxtConfigPatch(NUXT_CONFIG, { id: 'com.example.hello', name: 'Hello', logo: 'public/logo.png', brand: '#112233' })
+  assert.match(out, /brand: \{ color: '#112233' \}/)
+  assert.match(out, /source: 'public\/logo\.png'/)
+  assert.doesNotMatch(out, /\/\/ icons:/)
 })
 
 test('renderWrapperMirror swaps only the gradle-dist host', () => {

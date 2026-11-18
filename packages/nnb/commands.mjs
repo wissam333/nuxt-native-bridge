@@ -7,6 +7,7 @@ import {
   resolveElectronPath, run, syncDir, waitPort,
 } from './lib.mjs'
 import { buildIcons } from './icons.mjs'
+import { askLogoPath, hexColor, renderIconsPatch, resolveLogo } from './init.mjs'
 import { nativeSync } from './native-sync.mjs'
 
 const appDir = () => process.cwd()
@@ -177,10 +178,38 @@ export async function sync() {
 // mipmaps when a shell exists.
 // ---------------------------------------------------------------------------
 export async function icons() {
-  const cfg = await readAppConfig(appDir())
-  const icons = cfg.config.nativeBridge?.icons
-  if (!icons?.source) fail('nativeBridge.icons.source missing from nuxt.config.ts (spec §5)')
-  await buildIcons(appDir(), icons, cfg.config.nativeBridge?.brand?.color)
+  const dir = appDir()
+  const cfg = await readAppConfig(dir)
+  const existing = cfg.config.nativeBridge?.icons
+  const brand = cfg.config.nativeBridge?.brand?.color
+  if (existing?.source) {
+    await buildIcons(dir, existing, brand)
+    return
+  }
+
+  // No live icons.source: ask for a logo, or leave the shape commented.
+  const typed = await askLogoPath()
+  const resolved = resolveLogo(dir, typed)
+  if (resolved.note) log(resolved.note)
+  const color = hexColor(brand)
+  const file = path.join(dir, 'nuxt.config.ts')
+  const before = fs.readFileSync(file, 'utf8')
+  const after = renderIconsPatch(before, { logo: resolved.logo, brand: color, commentedPath: resolved.commentedPath })
+  if (after !== before) {
+    fs.writeFileSync(file, after)
+    log('nuxt.config.ts: wrote nativeBridge.icons')
+  }
+  if (!resolved.logo) {
+    if (after === before && !before.includes('nativeBridge')) {
+      fail('nativeBridge block missing from nuxt.config.ts — run `nnb init` first')
+    }
+    fail('commented icons example is in nuxt.config.ts — point source, glyph and splash at your logo, then run `nnb icons` again')
+  }
+  await buildIcons(dir, {
+    source: resolved.logo,
+    android: { glyph: resolved.logo, background: color },
+    splash: resolved.logo,
+  }, color)
 }
 
 export async function buildAndroid() {

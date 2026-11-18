@@ -22,7 +22,7 @@ Full tutorial, per-target guides and specs: [github.com/wissam333/nuxt-native-br
 | `nnb build electron [--installer]` | Packaged desktop app (+ Squirrel installer), Electron fuses hardened |
 | `nnb build android` | Generates the android-target web assets, syncs the native shell, runs Gradle, reports the APK path |
 | `nnb sync` | Regenerates the native files nnb owns; idempotent, preserves everything you authored |
-| `nnb icons` | Web/desktop icons + Android mipmaps + splash logo from one config block |
+| `nnb icons` | Web/desktop icons + Android mipmaps + splash logo from `nativeBridge.icons`. Asks for a logo path when that block is missing, or inserts it commented out |
 | `nnb doctor` | 7-check environment audit: Node, electron adapter, `nativeBridge` config, module install, JDK, Android SDK, android project |
 
 ## Notes

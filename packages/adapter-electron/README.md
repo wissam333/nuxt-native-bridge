@@ -25,7 +25,7 @@ Forge with the hardened config in this package.
 | Protocol | `app://` serves the packaged UI only; no `file://`, no network origins |
 | Window | sandboxed renderer, `contextIsolation`, no node integration, navigation and new-window guards |
 | Preload | minimal `contextBridge` surface (CJS, sandbox-compatible) |
-| CSP | strict Content-Security-Policy header served on every `app://` response |
+| CSP | Content-Security-Policy on every `app://` response. Scripts stay on the app origin. Images, stylesheets and fonts may load over http(s) |
 | Process | single-instance lock, rejected remote content, window-state persistence |
 | Packaging | Electron Forge + asar integrity fuses (`onlyLoadAppFromAsar`, cookie encryption, etc.) |
 | Smoke probe | `NNB_SMOKE=1` boots the shell, asserts the page title and exits 0/1 |

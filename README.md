@@ -59,8 +59,10 @@ cd my-app
 pnpm dlx @nnb/cli init
 ```
 
-`init` prompts for your **package id** (`com.you.myapp`) and **app name**, adds the
-npm packages (`nuxt-native-bridge`, Capacitor, the `@nnb` toolchain), then wires all
+`init` prompts for your **package id** (`com.you.myapp`), **app name**, and **logo path**.
+Press Enter on the logo and it writes `nativeBridge.icons` commented out, ready
+to point at your file. A real path writes the block live and generates the icons.
+It adds the npm packages (`nuxt-native-bridge`, Capacitor, the `@nnb` toolchain), then wires all
 three targets: the `nativeBridge` config block, the Capacitor Android shell, the
 hardened Electron main, the native theme/splash files, and a `nnb doctor` check at
 the end. Afterwards the app has its own copy of the CLI: run everything below with

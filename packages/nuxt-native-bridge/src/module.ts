@@ -13,7 +13,11 @@ export interface ModuleOptions {
     splash?: { hideOn?: string, fade?: number, failsafe?: number, light?: string, dark?: string }
     mavenMirrors?: string[]
     permissions?: string[]
-  }
+  },
+  electron?: {
+    splash?: { hideOn?: string, fade?: number, failsafe?: number, light?: string, dark?: string }
+    // electron-specific configurations
+  },
 }
 
 // Build target for this generation: web default; electron/android go static+SPA.
