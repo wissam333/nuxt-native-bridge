@@ -20,6 +20,7 @@ const NUXT_CONFIG = `export default defineNuxtConfig({
 test('renderNuxtConfigPatch inserts the marker block and the modules entry', () => {
   const out = renderNuxtConfigPatch(NUXT_CONFIG, { id: 'com.example.hello', name: 'Hello' })
   assert.match(out, /nnb:init[\s\S]*nativeBridge:[\s\S]*app: \{ id: 'com\.example\.hello', name: 'Hello' \}/)
+  assert.match(out, /theme: 'both'/)
   assert.match(out, /modules: \['nuxt-native-bridge'\]/)
   assert.match(out, /\/\/ nnb:icons — point source, glyph and splash at your logo/)
   assert.match(out, /\/\/ icons: \{\n {4}\/\/ {3}source: 'public\/logo\.png'/)

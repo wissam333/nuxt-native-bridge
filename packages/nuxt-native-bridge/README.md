@@ -29,13 +29,16 @@ theme/splash files and finishes with a `nnb doctor` environment check.
 nativeBridge: {
   app: { id: 'com.you.myapp', name: 'My App' },
   brand: { color: '#0D8A8F' },
+  theme: 'both',                        // 'light' | 'dark' | 'both' native launch theme
   apiBase: 'https://api.example.com',   // carried to native targets only
   icons: {
     source: 'public/icon.jpg',          // web/desktop icons + favicons
     android: { glyph: 'public/glyph.png', background: ['#16211F', '#0A1311'] },
     splash: 'public/glyph.png',         // splash logo
   },
-  android: { splash: { hideOn: 'mounted', fade: 300 } },
+  android: {
+    splash: { hideOn: 'mounted', fade: 300, light: '#0D8A8F', dark: '#0B1416' },
+  },
   backButton: { exitRoutes: ['/'] },    // system back asks to exit here, not navigate
 }
 ```
@@ -52,7 +55,8 @@ Changed branding? `pnpm exec nnb icons` regenerates everything from this block.
   List `nuxt-native-bridge` before `@nuxt/image` in `modules` for this to apply.
 - Early-boot script: target/os attributes, native safe-area minimums and the
   pre-paint status-bar color land before any Vue code runs.
-- Splash hide/fade timing that follows the system dark mode on Android 12+.
+- Splash hide/fade timing. The launch theme follows `theme`: `both` tracks the
+  system dark mode on Android 12+, `light`/`dark` pin it.
 
 ## Composables
 

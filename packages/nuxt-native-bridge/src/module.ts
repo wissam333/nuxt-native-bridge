@@ -4,6 +4,8 @@ import type { Nuxt } from '@nuxt/schema'
 export interface ModuleOptions {
   app: { id: string, name: string }
   brand: { color: string }
+  /** Native launch theme: `both` follows the system, `light`/`dark` force one. */
+  theme?: 'light' | 'dark' | 'both'
   /** API origin for native builds; web keeps the app's own config (T5). */
   apiBase?: string
   baseStyles: boolean
@@ -13,11 +15,11 @@ export interface ModuleOptions {
     splash?: { hideOn?: string, fade?: number, failsafe?: number, light?: string, dark?: string }
     mavenMirrors?: string[]
     permissions?: string[]
-  },
+  }
   electron?: {
     splash?: { hideOn?: string, fade?: number, failsafe?: number, light?: string, dark?: string }
     // electron-specific configurations
-  },
+  }
 }
 
 // Build target for this generation: web default; electron/android go static+SPA.

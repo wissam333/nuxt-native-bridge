@@ -36,6 +36,36 @@ test('renderThemes emits light+dark launch themes and NoActionBar from config', 
   assert.match(stylesXml, /android:navigationBarColor">#0D8A8F/)
 })
 
+test('renderThemes theme:light pins day and night resources to light', () => {
+  const cfg = {
+    brand: { color: '#123456' },
+    theme: 'light',
+    android: { splash: { light: '#FFFFFF', dark: '#000000' } },
+  }
+  const { stylesXml, stylesNightXml } = renderThemes(cfg)
+  assert.match(stylesXml, /windowSplashScreenBackground">#FFFFFF/)
+  assert.doesNotMatch(stylesXml, /#000000|@drawable\/splash_dark/)
+  assert.match(stylesNightXml, /windowSplashScreenBackground">#FFFFFF/)
+  assert.doesNotMatch(stylesNightXml, /#000000|@drawable\/splash_dark/)
+})
+
+test('renderThemes theme:dark pins day and night resources to dark', () => {
+  const cfg = {
+    brand: { color: '#123456' },
+    theme: 'dark',
+    android: { splash: { light: '#FFFFFF', dark: '#000000' } },
+  }
+  const { stylesXml, stylesNightXml } = renderThemes(cfg)
+  assert.match(stylesXml, /windowSplashScreenBackground">#000000/)
+  assert.doesNotMatch(stylesXml, /#FFFFFF|@drawable\/splash"/)
+  assert.match(stylesNightXml, /windowSplashScreenBackground">#000000/)
+  assert.doesNotMatch(stylesNightXml, /#FFFFFF|@drawable\/splash"/)
+})
+
+test('renderThemes rejects an unknown theme', () => {
+  assert.throws(() => renderThemes({ ...CFG, theme: 'auto' }), /nativeBridge\.theme must be/)
+})
+
 test('renderManifestPatch writes permissions between markers and removes stale ones', () => {
   const out = renderManifestPatch(MANIFEST, CFG.android.permissions)
   // declared between markers...

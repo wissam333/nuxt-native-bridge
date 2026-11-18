@@ -16,61 +16,55 @@ const assertHex = (value, what) => {
 export function renderThemes(cfg, existing = null) {
   const brand = cfg?.brand?.color || '#0D8A8F'
   const splash = cfg?.android?.splash || {}
+  const theme = cfg?.theme || 'both'
+  if (!['light', 'dark', 'both'].includes(theme)) {
+    throw new Error(`nativeBridge.theme must be "light", "dark" or "both", got ${JSON.stringify(theme)}`)
+  }
   assertHex(brand, 'nativeBridge.brand.color')
-  assertHex(splash.light, 'android.splash.light')
-  assertHex(splash.dark, 'android.splash.dark')
+  if (theme !== 'dark') assertHex(splash.light, 'android.splash.light')
+  if (theme !== 'light') assertHex(splash.dark, 'android.splash.dark')
 
-  const generated = `    <!-- nnb:styles — generated from nativeBridge config, rewritten by nnb sync -->
+  // `theme` picks the launch colors the native shell uses. `both` keeps the
+  // system-night split; `light`/`dark` force one scheme so the cold-start
+  // splash cannot disagree with the app.
+  const styles = (marker, bg, drawable, altBg, altDrawable) => `    <!-- ${marker} — generated from nativeBridge config, rewritten by nnb sync -->
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:windowBackground">${splash.light}</item>
+        <item name="android:windowBackground">${bg}</item>
         <item name="android:navigationBarColor">${brand}</item>
     </style>
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
-        <item name="android:windowBackground">${splash.light}</item>
-        <item name="windowSplashScreenBackground">${splash.light}</item>
+        <item name="android:background">${drawable}</item>
+        <item name="android:windowBackground">${bg}</item>
+        <item name="windowSplashScreenBackground">${bg}</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar">${bg === splash.light}</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="AppTheme.NoActionBarLaunchDark" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash_dark</item>
-        <item name="android:windowBackground">${splash.dark}</item>
-        <item name="windowSplashScreenBackground">${splash.dark}</item>
+        <item name="android:background">${altDrawable}</item>
+        <item name="android:windowBackground">${altBg}</item>
+        <item name="windowSplashScreenBackground">${altBg}</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightStatusBar">${altBg === splash.light}</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
-    <!-- /nnb:styles -->`
+    <!-- /${marker} -->`
+
+  const light = marker => styles(marker, splash.light, '@drawable/splash', splash.light, '@drawable/splash')
+  const dark = marker => styles(marker, splash.dark, '@drawable/splash_dark', splash.dark, '@drawable/splash_dark')
+  const both = marker => styles(marker, splash.light, '@drawable/splash', splash.dark, '@drawable/splash_dark')
+  const generated = theme === 'light' ? light('nnb:styles') : theme === 'dark' ? dark('nnb:styles') : both('nnb:styles')
 
   // values-night: on Android 12+ the SYSTEM draws the cold-start splash from
   // resources resolved at window creation — before any code runs — so the
   // app's runtime dark pref can never repaint it (T9 device finding: pref
-  // dark + dotted setTheme still booted the green splash). The achievable
-  // behavior is resource-driven: when system night mode is on, these same
-  // style names resolve dark. The runtime setTheme(dark) in
-  // NnbBridgeActivity still themes the window BEHIND the splash and pre-31
-  // devices, so it stays.
-  const generatedNight = `    <!-- nnb:styles-night — dark resolution of the launch styles, rewritten by nnb sync -->
-    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:windowBackground">${splash.dark}</item>
-        <item name="android:navigationBarColor">${brand}</item>
-    </style>
-
-    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash_dark</item>
-        <item name="android:windowBackground">${splash.dark}</item>
-        <item name="windowSplashScreenBackground">${splash.dark}</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-    </style>`
+  // dark + dotted setTheme still booted the green splash). `theme: light`
+  // pins this file to light; otherwise it resolves dark.
+  const generatedNight = theme === 'light' ? light('nnb:styles-night') : dark('nnb:styles-night')
 
   const nightFile = `<?xml version="1.0" encoding="utf-8" ?>\n<resources>\n\n${generatedNight}\n</resources>\n`
 

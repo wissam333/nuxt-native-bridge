@@ -242,6 +242,7 @@ export function renderNuxtConfigPatch(configText, { id, name, logo = null, brand
   nativeBridge: {
     app: { id: '${id}', name: '${name}' },
     brand: { color: '${color}' },
+    theme: 'both', // 'light' | 'dark' | 'both'
 ${icons}
     android: {
       splash: { hideOn: 'mounted', fade: 300, failsafe: 8000, light: '#0D8A8F', dark: '#0B1416' },

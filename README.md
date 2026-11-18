@@ -57,16 +57,30 @@ Everything nnb reads lives in one block in `nuxt.config.ts`:
 nativeBridge: {
   app: { id: 'com.you.myapp', name: 'My App' },
   brand: { color: '#0D8A8F' },
+  theme: 'both', // 'light' | 'dark' | 'both': native launch and splash theme
   apiBase: 'https://api.example.com', // exposed on native targets only
   icons: {
     source: 'public/logo.png', // web and desktop icons + favicons
     android: { glyph: 'public/logo.png', background: '#0D8A8F' },
     splash: 'public/logo.png',
   },
-  android: { splash: { hideOn: 'mounted', fade: 300 } },
+  android: {
+    splash: { hideOn: 'mounted', fade: 300, light: '#0D8A8F', dark: '#0B1416' },
+  },
   backButton: { exitRoutes: ['/'] }, // back here asks to exit instead of navigating
 }
 ```
+
+`theme` controls the native launch and splash colors on Android:
+
+| Value | Behavior |
+| --- | --- |
+| `both` (default) | light by day, dark when the device is in night mode |
+| `light` | always uses `android.splash.light`, even in night mode |
+| `dark` | always uses `android.splash.dark`, even in day mode |
+
+Use `light` or `dark` when your app has a fixed theme, so the cold-start splash matches it.
+Run `npx nnb sync` after changing it.
 
 After changing the logo or brand color, run `npx nnb icons` once. It regenerates the web
 icons, Android launcher icons and splash artwork from this block. If you skipped the logo
@@ -134,7 +148,7 @@ Some vendors (MIUI, HyperOS) show an on-phone confirmation dialog you must accep
 
 Two device notes:
 
-- the cold-start splash follows the system dark mode, because Android 12+ resolves it
+- the cold-start splash follows `nativeBridge.theme`, because Android 12+ resolves it
   before your code runs
 - Android caches splash and launcher icons per `versionCode`; bump it in
   `android/app/build.gradle` to see new artwork
