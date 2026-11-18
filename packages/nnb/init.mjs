@@ -257,7 +257,12 @@ ${icons}
   const modules = /(modules:\s*\[)([^\]]*)(\])/.exec(out)
   if (modules) {
     const entries = modules[2].trim().replace(/,\s*$/, '')
-    const joined = entries ? `${entries}, 'nuxt-native-bridge'` : `'nuxt-native-bridge'`
+    let joined = entries ? `${entries}, 'nuxt-native-bridge'` : `'nuxt-native-bridge'`
+    // Module setup runs in registration order. nnb must precede @nuxt/image so
+    // its ipx provider is disabled in native builds, otherwise images break.
+    if (/@nuxt\/image\b/.test(entries)) {
+      joined = `'nuxt-native-bridge'${entries ? `, ${entries}` : ''}`
+    }
     out = out.replace(modules[0], `${modules[1]}${joined}${modules[3]}`)
   }
   // Insert before the final closer of defineNuxtConfig({ ... }).

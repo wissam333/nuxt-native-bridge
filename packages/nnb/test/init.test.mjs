@@ -38,6 +38,15 @@ test('renderNuxtConfigPatch appends to an existing modules array', () => {
   assert.doesNotMatch(out, /modules: \['nuxt-native-bridge'\]/)
 })
 
+test('renderNuxtConfigPatch puts nnb before @nuxt/image', () => {
+  const withModules = NUXT_CONFIG.replace(
+    '  compatibilityDate',
+    '  modules: [\'@nuxt/eslint\', \'@nuxt/image\'],\n  compatibilityDate',
+  )
+  const out = renderNuxtConfigPatch(withModules, { id: 'com.example.hello', name: 'Hello' })
+  assert.match(out, /modules: \['nuxt-native-bridge', '@nuxt\/eslint', '@nuxt\/image'\]/)
+})
+
 test('renderNuxtConfigPatch is idempotent and leaves an existing nativeBridge alone', () => {
   const once = renderNuxtConfigPatch(NUXT_CONFIG, { id: 'com.example.hello', name: 'Hello' })
   const twice = renderNuxtConfigPatch(once, { id: 'com.example.hello', name: 'Hello' })
