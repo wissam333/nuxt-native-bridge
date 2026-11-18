@@ -57,7 +57,7 @@ onMounted(() => {
 // the REAL density-corrected values (guessed 32px put the title under the
 // camera on a 110px cutout; Phase 2 moves the layout onto the module tokens).
 const { insets } = useNativeSafeArea()
-watch(insets, v => {
+watch(insets, (v) => {
   console.log('[nnb-insets]', JSON.stringify(v))
   const root = document.documentElement.style
   root.setProperty('--safe-area-top-min', `${v.top}px`)

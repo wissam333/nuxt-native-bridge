@@ -1,84 +1,29 @@
-<!--
-Get your module up and running quickly.
+# nuxt-native-bridge
 
-Find and replace all on all files (CMD+SHIFT+F):
-- Name: My Module
-- Package name: my-module
-- Description: My new Nuxt module
--->
-
-# My Module
-
-[![npm version][npm-version-src]][npm-version-href]
-[![npm downloads][npm-downloads-src]][npm-downloads-href]
-[![License][license-src]][license-href]
-[![Nuxt][nuxt-src]][nuxt-href]
-
-My new Nuxt module for doing amazing things.
-
-- [✨ &nbsp;Release Notes](/CHANGELOG.md)
-<!-- - [🏀 Online playground](https://stackblitz.com/github/your-org/my-module?file=playground%2Fapp.vue) -->
-<!-- - [📖 &nbsp;Documentation](https://example.com) -->
-
-## Features
-
-<!-- Highlight some of the features your module provide here -->
-- ⛰ &nbsp;Foo
-- 🚠 &nbsp;Bar
-- 🌲 &nbsp;Baz
-
-## Quick Setup
-
-Install the module to your Nuxt application with one command:
+One Nuxt codebase shipped as a website, a desktop app (Electron) and an Android app
+(Capacitor). This module is the Nuxt half: target switch, early-boot script, splash
+timing, safe-area tokens, back-button handling and the `nativeBridge` config contract.
 
 ```bash
-npx nuxt module add my-module
+pnpm dlx @nnb/cli init          # scaffolds an app for all three targets
+pnpm exec nnb dev web           # or your own `pnpm dev`
+pnpm exec nnb build electron    # packaged desktop app
+pnpm exec nnb build android     # generated + synced + Gradle, one command
 ```
 
-That's it! You can now use My Module in your Nuxt app ✨
+Full tutorial, CLI reference and specs: [github.com/wissam333/nuxt-native-bridge](https://github.com/wissam333/nuxt-native-bridge).
 
+## What the module does
 
-## Contribution
+- `nativeBridge` config block in `nuxt.config.ts` (app id/name, brand color, icons,
+  splash, apiBase, permissions, exit routes).
+- Target switch from `NUXT_TARGET`: web keeps your config untouched; electron and
+  android build a static SPA with pre-compression off (Android's asset merger
+  rejects `.gz` siblings).
+- Composables: `useNativePlatform()`, `useSafeArea()`, `useApiBase()`, `useNativeApp()`.
+- Free native behavior: splash hide/fade, theme-following dark mode, safe-area
+  padding, Android back-button exit modal.
 
-<details>
-  <summary>Local development</summary>
-  
-  ```bash
-  # Install dependencies
-  npm install
-  
-  # Generate type stubs
-  npm run dev:prepare
-  
-  # Develop with the playground
-  npm run dev
-  
-  # Build the playground
-  npm run dev:build
-  
-  # Run ESLint
-  npm run lint
-  
-  # Run Vitest
-  npm run test
-  npm run test:watch
-  
-  # Release new version
-  npm run release
-  ```
+Tested with Nuxt 3.16+ and Nuxt 4.x, Capacitor 8.x, Electron 39 + Forge 7.
 
-</details>
-
-
-<!-- Badges -->
-[npm-version-src]: https://img.shields.io/npm/v/my-module/latest.svg?style=flat&colorA=020420&colorB=00DC82
-[npm-version-href]: https://npmjs.com/package/my-module
-
-[npm-downloads-src]: https://img.shields.io/npm/dm/my-module.svg?style=flat&colorA=020420&colorB=00DC82
-[npm-downloads-href]: https://npm.chart.dev/my-module
-
-[license-src]: https://img.shields.io/npm/l/my-module.svg?style=flat&colorA=020420&colorB=00DC82
-[license-href]: https://npmjs.com/package/my-module
-
-[nuxt-src]: https://img.shields.io/badge/Nuxt-020420?logo=nuxt
-[nuxt-href]: https://nuxt.com
+MIT license.

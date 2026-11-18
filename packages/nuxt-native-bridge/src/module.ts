@@ -25,7 +25,7 @@ export default defineNuxtModule<ModuleOptions>({
   meta: {
     name: 'nuxt-native-bridge',
     configKey: 'nativeBridge',
-    compatibility: { nuxt: '>=4.0.0' },
+    compatibility: { nuxt: '^3.16.0 || >=4.0.0' },
   },
   defaults: {
     app: { id: 'com.example.app', name: 'My App' },
@@ -39,10 +39,13 @@ export default defineNuxtModule<ModuleOptions>({
     const target = (process.env.NUXT_TARGET || 'web') as NnbTarget
 
     // 1. Target switch: native targets are static SPA; the web target keeps
-    //    whatever the app configured (audit item 36).
+    //    whatever the app configured (audit item 36). Pre-compression must be
+    //    off for native: .js.gz/.css.gz siblings break Android's asset merger
+    //    ("Duplicate resources") and the shells serve files directly anyway.
     if (target !== 'web') {
       nuxt.options.ssr = false
       nuxt.options.nitro.preset = 'static'
+      nuxt.options.nitro.compressPublicAssets = false
     }
 
     // 2. Runtime access to module config + target for the composables/plugin.

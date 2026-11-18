@@ -5,7 +5,7 @@ else is untested. Update this table when a pin changes, with the reason.
 
 | Component            | Pinned              | Notes |
 | -------------------- | ------------------- | ----- |
-| Nuxt                 | 4.x                 | tested with 4.6.4 (e2e scratch app) |
+| Nuxt                 | 3.16+ / 4.x         | 4.6.4 (e2e scratch app), 3.16.2 (ask-med, npm, android+electron built) |
 | Node                 | 24 LTS              | 24.22.2 |
 | Electron             | current stable      | via adapter-electron; Forge packaging |
 | @electron/forge      | current             | afterCopy prod-deps hook (pnpm layout) |
