@@ -52,6 +52,12 @@ export default defineNuxtModule<ModuleOptions>({
       nuxt.options.ssr = false
       nuxt.options.nitro.preset = 'static'
       nuxt.options.nitro.compressPublicAssets = false
+      // Native shells route on the client, so only the shell HTML is needed.
+      // Crawling app routes prerenders client-only pages (localStorage,
+      // window, auth state) on the server and fails the whole build.
+      nuxt.options.nitro.prerender ||= {}
+      nuxt.options.nitro.prerender.crawlLinks = false
+      nuxt.options.nitro.prerender.routes = ['/']
       // Nuxt Image's ipx provider emits /_ipx/... URLs that only a running
       // server can answer; native shells serve static files, so every image
       // (local and API-served) would silently break. Render plain <img> URLs.
