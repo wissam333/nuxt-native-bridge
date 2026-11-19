@@ -7,7 +7,7 @@ import {
   resolveElectronPath, run, syncDir, waitPort,
 } from './lib.mjs'
 import { buildIcons } from './icons.mjs'
-import { askLogoPath, hexColor, renderIconsPatch, resolveLogo, wireAndroid } from './init.mjs'
+import { askLogoPath, hexColor, renderIconsPatch, resolveLogo, wireAndroid, wireNuxtConfig } from './init.mjs'
 import { nativeSync } from './native-sync.mjs'
 
 const appDir = () => process.cwd()
@@ -182,6 +182,10 @@ export async function sync() {
   const dir = appDir()
   if (!fs.existsSync(path.join(dir, 'android'))) fail(`no android/ project in ${dir}, run \`nnb init\` first`)
   const cfg = await readAppConfig(dir)
+  // Without the module entry the native target switch never runs: the build
+  // stays web SSR and prerenders client-only pages (derma's localStorage
+  // pages). Quietly register it before generating anything.
+  wireNuxtConfig(dir)
   // Cap sync only copies an existing build; a stale or missing .output/public
   // is the usual "must contain an index.html" failure. Generate first.
   await ensureWebAssets(dir)
@@ -236,6 +240,10 @@ export async function icons() {
 export async function buildAndroid() {
   const androidDir = path.join(appDir(), 'android')
   if (!fs.existsSync(androidDir)) fail(`no android/ project in ${appDir()}`)
+
+  // Register the module before generating: sync also repairs it, but that
+  // happens after this build step.
+  wireNuxtConfig(appDir())
 
   // One command builds the native app: generate the web assets for the android
   // target first (Capacitor copies .output/public into the shell).

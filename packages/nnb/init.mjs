@@ -229,11 +229,38 @@ export function renderIconsPatch(configText, opts = {}) {
   return configText.slice(0, insertAt) + snippet + configText.slice(insertAt)
 }
 
+// Registers 'nuxt-native-bridge' in the modules array. An existing
+// nativeBridge block without the entry is the silent failure mode found on
+// derma: the config looks wired, but the module never runs, so native builds
+// keep web SSR and prerender client-only pages.
+export function renderModuleRegistration(configText) {
+  const modules = /(modules:\s*\[)([^\]]*)(\])/.exec(configText)
+  if (modules) {
+    if (/['"]nuxt-native-bridge['"]/.test(modules[2])) return configText
+    const entries = modules[2].trim().replace(/,\s*$/, '')
+    let joined = entries ? `${entries}, 'nuxt-native-bridge'` : `'nuxt-native-bridge'`
+    // Module setup runs in registration order. nnb must precede @nuxt/image so
+    // its ipx provider is disabled in native builds, otherwise images break.
+    if (/@nuxt\/image\b/.test(entries)) {
+      joined = `'nuxt-native-bridge'${entries ? `, ${entries}` : ''}`
+    }
+    return configText.replace(modules[0], `${modules[1]}${joined}${modules[3]}`)
+  }
+  if (/^[ \t]*modules\s*:/m.test(configText)) {
+    throw new Error('nuxt.config.ts has a modules option this package cannot edit; add "nuxt-native-bridge" to it manually')
+  }
+  const closer = configText.lastIndexOf('})')
+  if (closer === -1) {
+    throw new Error('could not find the defineNuxtConfig({...}) closer in nuxt.config.ts; add "nuxt-native-bridge" to modules manually')
+  }
+  return configText.slice(0, closer) + `  modules: ['nuxt-native-bridge'],\n` + configText.slice(closer)
+}
+
 // Inserts the nativeBridge block (and the module registration) into
 // nuxt.config.ts text. Existing nativeBridge blocks are left untouched;
 // renderIconsPatch fills in icons on those.
 export function renderNuxtConfigPatch(configText, { id, name, logo = null, brand = '#0D8A8F', commentedPath = null } = {}) {
-  if (/nativeBridge:/.test(configText)) return configText
+  if (/nativeBridge:/.test(configText)) return renderModuleRegistration(configText)
 
   const color = hexColor(brand)
   const icons = renderIconsLines('    ', { logo, brand: color, commentedPath }).replace(/\n$/, '')
@@ -252,27 +279,13 @@ ${icons}
   },
   // /nnb:init`
 
-  let out = configText
-  // Existing modules array: append the module there (last-key-wins would
-  // otherwise drop the app's own modules). Without one, the block brings it.
-  const modules = /(modules:\s*\[)([^\]]*)(\])/.exec(out)
-  if (modules) {
-    const entries = modules[2].trim().replace(/,\s*$/, '')
-    let joined = entries ? `${entries}, 'nuxt-native-bridge'` : `'nuxt-native-bridge'`
-    // Module setup runs in registration order. nnb must precede @nuxt/image so
-    // its ipx provider is disabled in native builds, otherwise images break.
-    if (/@nuxt\/image\b/.test(entries)) {
-      joined = `'nuxt-native-bridge'${entries ? `, ${entries}` : ''}`
-    }
-    out = out.replace(modules[0], `${modules[1]}${joined}${modules[3]}`)
-  }
+  let out = renderModuleRegistration(configText)
   // Insert before the final closer of defineNuxtConfig({ ... }).
   const closer = out.lastIndexOf('})')
   if (closer === -1) {
     throw new Error('could not find the defineNuxtConfig({...}) closer in nuxt.config.ts — wire nativeBridge manually')
   }
-  const insert = modules ? block : `  modules: ['nuxt-native-bridge'],\n${block}\n`
-  out = out.slice(0, closer) + `${insert}\n` + out.slice(closer)
+  out = out.slice(0, closer) + `${block}\n` + out.slice(closer)
   return out
 }
 
@@ -486,6 +499,19 @@ export function wireAndroid(appDir, appId) {
   }
 
   if (changed.length) log(`android: wired ${changed.length} project file(s): ${changed.join(', ')}`)
+  return true
+}
+
+// Same repair for nuxt.config.ts: apps scaffolded before the module entry was
+// added carry the nativeBridge block without registering the module. Idempotent.
+export function wireNuxtConfig(appDir) {
+  const file = path.join(appDir, 'nuxt.config.ts')
+  if (!fs.existsSync(file)) return false
+  const prev = fs.readFileSync(file, 'utf8')
+  const next = renderModuleRegistration(prev)
+  if (next === prev) return false
+  fs.writeFileSync(file, next)
+  log('nuxt.config.ts: registered nuxt-native-bridge in modules')
   return true
 }
 
