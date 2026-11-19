@@ -57,6 +57,9 @@
     "@nuxt/kit": "^4.6.4"
   },
   "devDependencies": {
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.2",
     "@nuxt/devtools": "^3.4.2",
     "@nuxt/eslint-config": "^1.17.0",
     "@nuxt/module-builder": "^1.0.3",

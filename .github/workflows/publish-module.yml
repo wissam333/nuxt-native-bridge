@@ -16,9 +16,6 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/nuxt-native-bridge
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -26,10 +23,26 @@ jobs:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
+
+      # The package declares `workspaces: [playground]` for local dev, and the
+      # playground uses the pnpm-only `workspace:*` protocol. Stage a copy
+      # without it so plain npm can install and publish the package itself.
+      - name: Stage the package
+        run: |
+          mkdir "$RUNNER_TEMP/module"
+          cp -R packages/nuxt-native-bridge/. "$RUNNER_TEMP/module"
+          node -e "const fs=require('fs');const f=process.env.RUNNER_TEMP+'/module/package.json';const p=JSON.parse(fs.readFileSync(f));delete p.workspaces;fs.writeFileSync(f,JSON.stringify(p,null,2))"
+
       - run: npm install --no-audit --no-fund
+        working-directory: ${{ runner.temp }}/module
+      - run: npx nuxt-module-build prepare
+        working-directory: ${{ runner.temp }}/module
       - run: npm test
+        working-directory: ${{ runner.temp }}/module
       - run: npm run lint
+        working-directory: ${{ runner.temp }}/module
       - name: Publish if the version is new
+        working-directory: ${{ runner.temp }}/module
         run: |
           name=$(node -p "require('./package.json').name")
           version=$(node -p "require('./package.json').version")
